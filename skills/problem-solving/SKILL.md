@@ -7,7 +7,12 @@ description: "Creative problem-solving techniques for breaking through stuck poi
 
 A collection of techniques for breaking through stuck points and finding elegant solutions.
 
-## Available Sub-Skills
+Each technique lives in its own folder with a `SKILL.md`. Read them as reference files by the
+relative path given below — nested skill discovery isn't a documented behaviour on Antigravity or
+most other hosts, so don't rely on them being separately listed and triggerable. This file is the
+entry point; it routes, and the technique file does the work.
+
+## Available techniques
 
 ### When Stuck (Dispatch)
 **Location:** `when-stuck/SKILL.md`
@@ -66,6 +71,10 @@ Same thing implemented 5+ ways?     → simplification-cascades
 
 These techniques help you find the elegant solution that makes complexity unnecessary, rather than managing complexity through brute force.
 
-## Codex compatibility
+## Host compatibility
 
-Use the currently available Codex tools and skills for this workflow. If a referenced Claude agent, hook, MCP tool, or slash command is unavailable, perform the equivalent step inline, preserve the same artifact and verification requirements, and state the fallback briefly.
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.

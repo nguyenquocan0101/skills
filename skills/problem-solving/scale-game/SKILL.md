@@ -1,5 +1,5 @@
 ---
-name: Scale Game
+name: scale-game
 description: "Test at extremes (1000x bigger/smaller, instant/year-long) to expose fundamental truths hidden at normal scales"
 ---
 
@@ -66,3 +66,13 @@ Test your approach at extreme scales to find what breaks and what surprisingly s
 - What works at one scale often fails at another
 - Test both directions (bigger AND smaller)
 - Use insights to validate architecture early — cheaper to change now
+
+---
+
+## Host compatibility
+
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.

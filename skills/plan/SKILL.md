@@ -1,6 +1,6 @@
 ---
 name: plan
-description: "Plan a feature or system before implementation. Use when the user says \"plan this\", \"I want to build X\", \"how do I implement Y\", or when $brainstorm produces a spec.md. Always run before $cook. Modes (pick one): --fast (skip all, instant plan), --hard (2 researchers + red-team + validate), --two (2 approaches → compare → pick → cook), --parallel (parallel-impl plan → cook --parallel), --auto (full pipeline + auto-cook). Composable flags: --tdd, --no-task — propagate into the cook pipeline."
+description: "Plan a feature or system before implementation. Use when the user says \"plan this\", \"I want to build X\", \"how do I implement Y\", or when `brainstorm` produces a spec.md. Always run before `cook`. Modes (pick one): --fast (skip all, instant plan), --hard (2 researchers + red-team + validate), --two (2 approaches → compare → pick → cook), --parallel (parallel-impl plan → cook --parallel), --auto (full pipeline + auto-cook). Composable flags: --tdd, --no-task — propagate into the cook pipeline."
 ---
 
 # plan — Structured Planning Pipeline
@@ -9,10 +9,10 @@ description: "Plan a feature or system before implementation. Use when the user 
 
 | Mode         | Research                         | Red-Team     | Validate    | Cook handoff                     |
 | ------------ | -------------------------------- | ------------ | ----------- | -------------------------------- |
-| `--fast`     | —                                | —            | —           | `$cook --fast`                |
-| `--hard`     | 2 researchers                    | ✓            | ✓ (wait)    | `$cook --hard`                |
-| `--two`      | 2 researchers (one per approach) | ✓ both plans | pick A or B | `$cook [user-chosen mode]`    |
-| `--parallel` | 2 researchers                    | ✓            | optional    | `$cook --parallel`            |
+| `--fast`     | —                                | —            | —           | `cook --fast`                |
+| `--hard`     | 2 researchers                    | ✓            | ✓ (wait)    | `cook --hard`                |
+| `--two`      | 2 researchers (one per approach) | ✓ both plans | pick A or B | `cook [user-chosen mode]`    |
+| `--parallel` | 2 researchers                    | ✓            | optional    | `cook --parallel`            |
 | `--auto`     | 1 researcher                     | ✓            | ✓ (wait)    | auto-invoke cook (detected mode) |
 
 **Auto-detect** (no mode given): Fast if single-file / familiar / ≤ 2 components; Hard otherwise.
@@ -38,7 +38,7 @@ Before spawning any agents, detect mode and challenge scope:
 
 If scope is too large: suggest splitting and **wait for user confirmation**.
 
-If `--hard` / `--two` / `--parallel` and novel/ambiguous with no brainstorm report: "No brainstorm found. Run `$brainstorm` first? [Y/n]" — if Yes, stop; if No, proceed.
+If `--hard` / `--two` / `--parallel` and novel/ambiguous with no brainstorm report: "No brainstorm found. Run `brainstorm` first? [Y/n]" — if Yes, stop; if No, proceed.
 
 If a spec file path is provided or `plans/{slug}/spec.md` exists adjacent to any plan: run a **Spec Quality Check** inline:
 
@@ -106,10 +106,11 @@ Write this line into the `plan.md` header block immediately after the `Mode:` li
 
 Spawn the **`planner` agent** with: feature description + mode + research reports + test flag + spec file path (if any).
 
-**After planner returns**: capture the plan directory path from its "Directory: plans/{date}-{slug}/" line — you'll need it in Step 3.
+**After planner returns**: capture the plan directory path from its `Directory: plans/{slug}/` line — you'll need it in Step 3.
 
 - **`--tdd`**: planner adds `### Tests to Write First` to each phase, derived from spec acceptance criteria
 - **Spec provided**: planner maps each phase to the P1/P2/P3 stories it covers
+- **Every phase**: the canonical phase ID is the phase filename without `.md` (for example, `phase-01-auth-api`). This exact ID is the handoff key used by `cook` and `feature_list.json`.
 - **`--two`**: planner writes `plan-a.md` + `plan-b.md` (one per approach) — no `plan.md` yet
 - **`--parallel`**: planner adds `## File Ownership` section to each phase file
 
@@ -133,13 +134,21 @@ plans/{slug}/
 
 After the planner returns and plan files are confirmed on disk:
 
-1. Locate **project root** — the directory containing `.ck.json` (walk up from the plan directory).
-2. Determine feature entries. Each entry requires **all** of these fields — never omit any:
-   - **If spec.md was loaded**: extract P1 user stories → one entry per story. `id` = story slug, `title` = user-visible behavior, `user_visible_behavior` = "so that {value}" clause, `verification_command` = "Accepted when" condition, `status` = `"not_started"`, `evidence` = `""`, `notes` = `""`, `priority` = P1/P2/P3 marker from the story heading. Do not populate `blocked_by` — it is user-managed and set manually when a cross-feature dependency is identified during implementation.
-   - **No spec**: use plan phases as fallback → one entry per phase. `id` = phase slug, `title` = phase name, `user_visible_behavior` = `""`, `verification_command` = `""`, `status` = `"not_started"`, `evidence` = `""`, `notes` = `""`. Do not populate `priority` or `blocked_by`.
-3. **Idempotency**: if `feature_list.json` already exists at project root, merge — add new entries, preserve `status` and `evidence` for any `id` already present.
-4. Write `{project_root}/feature_list.json` (NOT inside the plan subdirectory).
-5. Log: `feature_list.json → {project_root}/feature_list.json ({N} features)` or `({N} new + {M} preserved)` on merge.
+1. Locate **project root** using the resolution order in `../../references/artifact-layout.md`
+   (`.skills.json` marker → git root → cwd). State which rule fired.
+2. Enumerate the confirmed `phase-*.md` files and create **one entry per phase**. `cook` updates state phase by phase, so phase IDs — not story IDs — are the canonical tracking keys.
+3. Build each entry with these fields:
+   - `id` = exact phase filename without `.md` (for example, `phase-01-auth-api`)
+   - `title` = phase name
+   - `status` = `"not_started"`, `evidence` = `""`
+   - **If spec.md was loaded**: `user_visible_behavior` = concise summary of the mapped stories' user-visible outcomes; `verification_command` = the phase's measurable acceptance command or condition; `notes` = `"Covers stories: {comma-separated story IDs}"`; `priority` = highest mapped priority (`P1` before `P2` before `P3`).
+   - **No spec**: `user_visible_behavior` = `""`, `verification_command` = `""`, `notes` = `""`; omit `priority`.
+   - Do not populate `blocked_by` — it is user-managed and set manually when a cross-feature dependency is identified during implementation.
+   - Do not create separate story-ID entries. Story traceability belongs in each phase file and the phase entry's `notes`; this keeps the state key identical to the unit `cook` executes.
+4. **Idempotency**: if `feature_list.json` already exists at project root, merge — add new phase entries, preserve `status` and `evidence` for any exact phase `id` already present. Never merge by array position, title, or story ID.
+5. Write `{project_root}/feature_list.json` (NOT inside the plan subdirectory).
+6. Verify that every `phase-*.md` filename maps to exactly one entry with the same `id`; stop and fix duplicates or missing IDs before handoff.
+7. Log: `feature_list.json → {project_root}/feature_list.json ({N} phases)` or `({N} new + {M} preserved)` on merge.
 
 ---
 
@@ -148,8 +157,8 @@ After the planner returns and plan files are confirmed on disk:
 **`--fast`**: skip.
 
 **All other modes**: before spawning `plan-reviewer`, **verify plan files exist on disk** using Glob on the captured plan directory:
-- Normal modes: `plans/{date}-{slug}/plan.md` must exist
-- `--two` mode: `plans/{date}-{slug}/plan-a.md` + `plans/{date}-{slug}/plan-b.md` must exist
+- Normal modes: `plans/{slug}/plan.md` must exist
+- `--two` mode: `plans/{slug}/plan-a.md` + `plans/{slug}/plan-b.md` must exist
 
 If files are missing: **stop** — output `"Planner failed to write files. Do not proceed."` Do not fall back to writing the plan inline.
 
@@ -188,17 +197,18 @@ After selection: ask 2–3 targeted questions about the chosen plan. Merge chose
 
 **`--hard` / `--parallel` / `--auto`**: ask 3–5 targeted questions about the plan's riskiest points. **Wait for user answers.**
 
-After validation: hydrate tasks via TodoWrite (skip if `--no-task`). Recommend `--tdd` if spec.md exists and it's not already set.
+After validation: hydrate the host's task list — Antigravity's plan/task artifacts, Claude Code's
+TodoWrite, or a `- [ ]` checklist in `plan.md` where neither exists (skip entirely if `--no-task`). Recommend `--tdd` if spec.md exists and it's not already set.
 
 Output the exact cook command:
 
 | Mode         | Cook command                                                                                 |
 | ------------ | -------------------------------------------------------------------------------------------- |
-| `--fast`     | `$cook --fast [--tdd] plans/{slug}/plan.md`                                               |
-| `--hard`     | `$cook --hard [--tdd] plans/{slug}/plan.md`                                               |
-| `--two`      | `$cook [--fast\|--hard] [--tdd] plans/{slug}/plan.md`                                     |
-| `--parallel` | `$cook --parallel [--tdd] plans/{slug}/plan.md`                                           |
-| `--auto`     | Automatically invoke `$cook --{detected-mode} plans/{slug}/plan.md` — no separate command |
+| `--fast`     | `cook --fast [--tdd] plans/{slug}/plan.md`                                               |
+| `--hard`     | `cook --hard [--tdd] plans/{slug}/plan.md`                                               |
+| `--two`      | `cook [--fast\|--hard] [--tdd] plans/{slug}/plan.md`                                     |
+| `--parallel` | `cook --parallel [--tdd] plans/{slug}/plan.md`                                           |
+| `--auto`     | Automatically invoke `cook --{detected-mode} plans/{slug}/plan.md` — no separate command |
 
 ---
 
@@ -245,6 +255,14 @@ fact explicitly instead of fabricating a summary.
 | `planner`       | 2    | All                                                        |
 | `plan-reviewer` | 3    | All except `--fast`                                        |
 
-## Codex compatibility
+Definitions for these roles ship in `../../agents/` — copy them to `.agents/agents/`
+(Antigravity) or `.claude/agents/` (Claude Code). Without subagent support, run each role inline
+in the same order and keep its report section.
 
-Use the currently available Codex tools and skills for this workflow. If a referenced Claude agent, hook, MCP tool, or slash command is unavailable, perform the equivalent step inline, preserve the same artifact and verification requirements, and state the fallback briefly.
+## Host compatibility
+
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.

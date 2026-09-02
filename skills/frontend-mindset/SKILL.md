@@ -1,6 +1,6 @@
 ---
 name: frontend-mindset
-description: "Build production-grade frontend interfaces — visual design (color, typography, layout, motion), interaction states, UX copy, responsive behavior, performance (Core Web Vitals), and design review. Use when designing or reviewing websites, landing pages, dashboards, product UI, components, forms, or empty states; when colors/spacing/type feel off, generic, or \"AI-made\"; or when checking accessibility, responsiveness, or animation quality."
+description: "Build and review production frontend UI — app screens, dashboards, data tables, forms, components, empty states — covering visual design, the eight interaction states, UX copy, responsive behaviour, Core Web Vitals and accessibility. Use when implementing or reviewing product interface work, when spacing/type/color feel off or generic, or when checking contrast, keyboard access, responsiveness or animation quality. For a marketing landing page, portfolio or campaign site use design-taste-frontend; for a specifically restrained editorial monochrome look use minimalist-ui."
 ---
 
 # Frontend Development Skill
@@ -68,3 +68,13 @@ Full anti-pattern checklist and severity tagging: `references/review-checklist.m
 - Cap body line length 65–75ch; never animate layout-driving properties (`width`, `height`, `top`, `left`, margin) casually
 - Touch targets ≥44×44px even when the visual element is smaller
 - Measure performance before optimizing — don't fix what isn't slow
+
+---
+
+## Host compatibility
+
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.

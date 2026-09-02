@@ -483,3 +483,13 @@ Repeating one more time the core loop here for emphasis:
 Please add steps to your TodoList, if you have such a thing, to make sure you don't forget. If you're in Cowork, please specifically put "Create evals JSON and run `eval-viewer/generate_review.py` so human can review test cases" in your TodoList to make sure it happens.
 
 Good luck!
+
+---
+
+## Host compatibility
+
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.

@@ -1,5 +1,5 @@
 ---
-name: Inversion Exercise
+name: inversion-exercise
 description: "Flip core assumptions to reveal hidden constraints and alternative approaches - \"what if the opposite were true?\""
 ---
 
@@ -57,3 +57,13 @@ Flip every assumption and see what still works. Sometimes the opposite reveals t
 - Valid inversions reveal context-dependence
 - Sometimes the opposite is the answer
 - Question every "must be" or "always" statement
+
+---
+
+## Host compatibility
+
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.

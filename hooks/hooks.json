@@ -1,0 +1,31 @@
+{
+  "skills-simplify": {
+    "enabled": true,
+    "PostToolUse": [
+      {
+        "matcher": "edit_file|write_file|replace_file_content|create_file|write_to_file|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .agents/hooks/simplify_trigger.py post_tool_use",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostInvocation": [
+      {
+        "type": "command",
+        "command": "python3 .agents/hooks/simplify_trigger.py post_invocation",
+        "timeout": 10
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 .agents/hooks/simplify_trigger.py stop",
+        "timeout": 10
+      }
+    ]
+  }
+}

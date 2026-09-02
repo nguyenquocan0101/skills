@@ -1,46 +1,80 @@
 ---
-name: bbskills
-description: "Portable collection of reusable agent workflows for brainstorming, specification, planning, implementation, debugging, CI/CD, frontend design, problem solving, and skill creation. Use when a task matches one of the bundled workflows or when the user asks to choose the right workflow."
+name: skills
+description: "Dispatcher for a collection of agent workflows — brainstorm, spec, plan, cook (implement), fix (debug), cicd, three frontend design skills, problem-solving techniques, and skill-creator. Use when a task matches one of these workflows, when the user asks which workflow to run, or when they want the collection's catalogue. Routes to exactly one component and loads only that one."
 ---
 
-# bbskills — Basic Agent Skill Collection
+# skills — agent workflow collection
 
-Use this skill as a lightweight dispatcher for the workflows bundled under `skills/`.
-Load only the component skill needed for the current task; do not load the entire collection
-unless the user explicitly asks for a catalog or comparison.
+A dispatcher. Pick the smallest component that covers the task, load that one, and follow it. The
+components are deliberately separate because loading all of them would fill the context with rules
+for work you aren't doing — and a plan skill that has also read the CI/CD standard tends to plan
+CI/CD nobody asked for.
 
-## Component catalog
+## Component catalogue
 
 | Component | Use it for |
-| --- | --- |
-| `brainstorm` | Explore alternatives, clarify a design, and write a brainstorm report plus spec |
-| `spec` | Write a specification directly when the direction is already decided |
-| `plan` | Research, split work into phases, review the plan, and hand off implementation |
-| `cook` | Implement a plan phase by phase with testing and review |
-| `fix` | Scout, diagnose, fix, review, and finalize a bug fix |
-| `cicd` | Scaffold or audit Docker, registry, and deployment pipelines |
-| `frontend-mindset` | Apply practical frontend engineering and product implementation judgment |
-| `design-taste-frontend` | Design polished, distinctive frontend interfaces |
-| `minimalist-ui` | Build restrained, focused, minimalist user interfaces |
-| `problem-solving` | Route a stuck problem to an appropriate reasoning technique |
-| `skill-creator` | Create, update, validate, and improve reusable skills |
+|---|---|
+| `brainstorm` | Explore alternatives before committing, then write a spec and a brainstorm report |
+| `spec` | Write the spec directly — the direction is already decided |
+| `plan` | Research, split into phases, red-team the plan, hand off to `cook` |
+| `cook` | Implement a plan phase by phase, with tests and review gates |
+| `fix` | Scout → diagnose → fix → review → finalize, for a specific bug |
+| `cicd` | Scaffold or audit a Docker → registry → deploy pipeline (Dokploy or Azure/K8s) |
+| `frontend-mindset` | Product UI: app screens, dashboards, tables, forms, components — and reviewing them |
+| `design-taste-frontend` | Marketing surfaces: landing pages, portfolios, campaign sites, redesigns |
+| `minimalist-ui` | One specific look: warm monochrome, editorial, flat bento, document-style |
+| `problem-solving` | The work is stuck and you need a different way to think about it |
+| `skill-creator` | Create, validate, evaluate or improve a skill |
+
+### Choosing between the three frontend skills
+
+They overlap enough that picking by keyword goes wrong, so pick by **what the page is for**:
+
+- Someone is going to *use* it repeatedly — dashboard, settings, table, form, admin tool →
+  `frontend-mindset`.
+- Someone is going to *look at it and decide* — landing page, portfolio, launch page, pricing
+  page, or an existing one that "looks AI-made" → `design-taste-frontend`.
+- The user named the aesthetic — minimal, editorial, Notion-like, document-style, or explicitly
+  rejected the colourful SaaS look → `minimalist-ui`.
+
+`minimalist-ui` is a look, not a methodology: it pairs with either of the other two rather than
+replacing them. If the brief is a dashboard *in* that aesthetic, read `frontend-mindset` for the
+engineering and `minimalist-ui` for the visual language.
 
 ## Routing procedure
 
-1. Identify the smallest matching component from the catalog.
+1. Identify the smallest matching component.
 2. Read that component's `skills/{component}/SKILL.md` completely before acting.
-3. Read only the direct references, scripts, or assets required by that component.
-4. Follow the component workflow and preserve its artifact and verification requirements.
-5. If a referenced agent, hook, MCP tool, TodoWrite action, or slash command is unavailable,
-   perform the closest equivalent inline and state the fallback briefly.
+3. Read only the references, scripts or assets that component points you to for the task at hand.
+4. Follow its workflow, and keep its artifacts and verification gates intact. Those gates are the
+   part that is easy to drop under time pressure and expensive to have dropped.
+5. If a referenced subagent, hook, task list or slash command isn't available on this host, do the
+   equivalent step inline and say briefly which fallback you used — see
+   `references/host-compatibility.md`.
 
-When a task spans multiple components, use the smallest useful sequence. For a novel feature,
-prefer `brainstorm` → `spec` or `plan` → `cook`; for an already decided feature, use `spec` or
-`plan` directly. Use `problem-solving` when the work is blocked or the failure mode is unclear.
+**Sequencing.** Novel or ambiguous feature: `brainstorm` → `plan` → `cook`. Already decided:
+`spec` or `plan` → `cook`. A specific bug: `fix` on its own. Blocked or the failure mode is
+unclear: `problem-solving` first, then back to whichever workflow you were in.
+
+## Shared contracts
+
+Three files define what the workflows agree on. Read the relevant one when a workflow points at it
+rather than up front:
+
+| File | Covers |
+|---|---|
+| `references/artifact-layout.md` | Where `spec.md`, `plan.md`, phase files and `feature_list.json` live; how the project root is resolved; the `.skills.json` config |
+| `references/review-rubric.md` | What the reviewer score means — severity levels, the arithmetic, the auto-approve gate |
+| `references/host-compatibility.md` | Antigravity / Claude Code / Codex mapping for subagents, hooks, task lists and slash commands; Antigravity's five hook events |
+
+`agents/` holds definitions for the ten subagent roles the workflows spawn (`researcher`,
+`planner`, `plan-reviewer`, `scout`, `debugger`, `tester`, `code-reviewer`, `project-manager`,
+`docs-manager`, `git-manager`). `hooks/` holds the simplify trigger that `cook` Step 3.S reads.
+Both have install instructions in their own README.
 
 ## Portability
 
-The bundled workflows are Markdown-first and can be used by Codex, another agent host, or a
-custom Node application. Host-specific commands are integration points, not prerequisites for
-the underlying reasoning. Replace unavailable host actions with equivalent local actions while
-keeping the workflow's safety gates, artifacts, tests, and review steps intact.
+The workflows are Markdown-first: the reasoning is the product, and host-specific machinery is an
+integration point rather than a prerequisite. Replace an unavailable host action with the
+equivalent local one, keep the safety gates, artifacts, tests and review steps, and state the
+substitution. The one thing that must never be silently dropped is a verification gate.

@@ -20,7 +20,7 @@ If no error message, stack trace, or concrete description provided:
 # Scope:
 #   Description: {what the user said}
 #   Quick?      → {yes/no — reason}
-#   Mode:       {Standard | Quick | Hard}
+#   Mode:       {Standard | Fast | Hard}
 ```
 
 If `--fast` or clearly a build/compiler/lint error: skip Step 1 → go directly to Step 2.
@@ -67,7 +67,8 @@ Spawn **`debugger`** with the scout evidence report:
 
 Spawn **`code-reviewer`**: correctness, security, regressions, code quality.
 
-**Standard**: auto-approve if score ≥ 9.5 with 0 CRITICAL. Up to 3 fix/re-review cycles (different approach each), then escalate.
+**Standard**: auto-approve if score ≥ 9.5 with 0 CRITICAL — scale and severity definitions in
+`../../references/review-rubric.md`. Up to 3 fix/re-review cycles (different approach each), then escalate.
 **`--hard`**: no auto-approve — human must explicitly approve before Step 4.
 
 ---
@@ -96,6 +97,14 @@ Spawn **`code-reviewer`**: correctness, security, regressions, code quality.
 | `docs-manager`    | 4    | Standard, `--hard` (skip for `--fast`) |
 | `git-manager`     | 4    | Always (mandatory) |
 
-## Codex compatibility
+Definitions for these roles ship in `../../agents/` — copy them to `.agents/agents/`
+(Antigravity) or `.claude/agents/` (Claude Code). Without subagent support, run each role inline
+in the same order and keep its report section.
 
-Use the currently available Codex tools and skills for this workflow. If a referenced Claude agent, hook, MCP tool, or slash command is unavailable, perform the equivalent step inline, preserve the same artifact and verification requirements, and state the fallback briefly.
+## Host compatibility
+
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.

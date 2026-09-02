@@ -1,18 +1,42 @@
 {
-  "name": "bbskills",
-  "version": "0.1.0",
-  "description": "Portable reusable agent workflows bundled as one skill collection",
-  "repository": "https://github.com/nguyenquocan0101/bbskills.git",
-  "license": "MIT",
+  "name": "@nguyenquocan0101/skills",
+  "version": "0.4.0",
+  "description": "Portable agent skill collection: brainstorm, spec, plan, cook, fix, cicd, frontend design, problem solving — with subagent definitions and an Antigravity hook",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nguyenquocan0101/skills.git"
+  },
+  "license": "MIT AND Apache-2.0",
   "files": [
     "SKILL.md",
     "README.md",
-    "skills"
+    "LICENSE",
+    "NOTICE.md",
+    "plugin.json",
+    "hooks.json",
+    "bin",
+    "skills",
+    "agents",
+    "hooks",
+    "references"
   ],
   "keywords": [
     "agent-skills",
+    "antigravity",
+    "antigravity-plugin",
+    "claude-code",
     "codex",
     "llm",
     "workflows"
-  ]
+  ],
+  "author": "nguyenquocan0101",
+  "bin": {
+    "skills": "bin/install.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

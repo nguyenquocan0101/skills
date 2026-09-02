@@ -1,12 +1,12 @@
 ---
 name: brainstorm
-description: "Explore and debate solutions before writing code. Use when the user poses a design question, asks \"how should I approach X\", wants to think through options before committing, or says anything like \"let's brainstorm\", \"what's the best way to...\", \"I'm not sure how to tackle this\", or \"should I use X or Y\". Always runs before $plan for novel or ambiguous features. No code is written — only: explore → clarify → spec → report."
+description: "Explore and debate solutions before writing code. Use when the user poses a design question, asks \"how should I approach X\", wants to think through options before committing, or says anything like \"let's brainstorm\", \"what's the best way to...\", \"I'm not sure how to tackle this\", or \"should I use X or Y\". Always runs before `plan` for novel or ambiguous features. No code is written — only: explore → clarify → spec → report."
 ---
 
 # brainstorm — Surface Ideas, Then Decide
 
 **Hard gate: zero implementation code.** Only explore → expand → spec → report.
-Implementation happens later via `$plan → $cook`.
+Implementation happens later via `plan` → `cook`.
 
 ---
 
@@ -117,13 +117,13 @@ Write **two files**:
 {What the user leaned toward and why — in their words where possible}
 
 ## Open Questions
-{Unresolved items that $plan must address}
+{Unresolved items that `plan` must address}
 
 ## Risks
 {Top 2–3 risks worth watching}
 ```
 
-**B. Spec file** → `plans/{slug}/spec.md` (from `.agents/skills/brainstorm/references/spec-template.md`)
+**B. Spec file** → `plans/{slug}/spec.md` (from `references/spec-template.md`)
 
 Fill in the template with what was established during Steps 0–4:
 - Populate user stories with P1/P2/P3 from the narrowed direction
@@ -142,7 +142,8 @@ spec: plans/{slug}/spec.md
 report: plans/reports/YYMMDD-{slug}-brainstorm.md
 date: {YYYY-MM-DD}
 ```
-This is the pointer file `$journal` reads to locate the latest brainstorm without relying on in-context memory.
+This is the pointer file later steps read to locate the most recent brainstorm without relying on
+in-context memory. See `../../references/artifact-layout.md` for the full artifact contract.
 
 ---
 
@@ -151,15 +152,19 @@ This is the pointer file `$journal` reads to locate the latest brainstorm withou
 Ask via `ask the user directly`:
 
 **"Spec written at `plans/{slug}/spec.md`. What next?"**
-- `→ $plan plans/{slug}/spec.md` — proceed to planning
-- `→ $journal` — archive, no plan yet
+- `→ `plan` plans/{slug}/spec.md` — proceed to planning
+- `Archive it` — keep the spec on disk, no plan yet
 - `Keep exploring` — return to Step 1 or Step 3
 
-When handing off to `$plan`, note that the planning step must return a detailed summary of
+When handing off to `plan`, note that the planning step must return a detailed summary of
 every generated phase (`phase-*.md`) in the chat, including its objective, tasks, affected
 files/modules, dependencies, tests or acceptance criteria, and risks. The brainstorm skill itself
 still ends after writing the spec and does not generate implementation phases.
 
-## Codex compatibility
+## Host compatibility
 
-Use the currently available Codex tools and skills for this workflow. If a referenced Claude agent, hook, MCP tool, or slash command is unavailable, perform the equivalent step inline, preserve the same artifact and verification requirements, and state the fallback briefly.
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.

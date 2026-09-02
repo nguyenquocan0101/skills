@@ -1,5 +1,5 @@
 ---
-name: Simplification Cascades
+name: simplification-cascades
 description: "Find one insight that eliminates multiple components - \"if this is true, we don't need X, Y, or Z\""
 ---
 
@@ -78,3 +78,13 @@ Sometimes one insight eliminates 10 things. Look for the unifying principle that
 - One powerful abstraction > ten clever hacks
 - The pattern is usually already there — it just needs recognition
 - Measure in "how many things can we delete?"
+
+---
+
+## Host compatibility
+
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.

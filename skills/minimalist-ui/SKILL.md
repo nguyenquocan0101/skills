@@ -1,16 +1,31 @@
 ---
 name: minimalist-ui
-description: Clean editorial-style interfaces. Warm monochrome palette, typographic contrast, flat bento grids, muted pastels. No gradients, no heavy shadows.
+description: "Build interfaces in one specific aesthetic: warm monochrome, editorial serif headings, flat bento grids, muted pastel accents, near-invisible shadows — the Notion/Linear document look. Use when the user asks for a minimal, editorial, document-style, Notion-like or restrained interface, or explicitly rejects the colourful SaaS look. This is a look, not a general frontend skill: for broad product UI use frontend-mindset, for marketing pages use design-taste-frontend."
 ---
 
-# Protocol: Premium Utilitarian Minimalism UI Architect
+# minimalist-ui — Editorial, Document-Style Interfaces
 
-## 1. Protocol Overview
-Name: Premium Utilitarian Minimalism & Editorial UI
-Description: An advanced frontend engineering directive for generating highly refined, ultra-minimalist, "document-style" web interfaces analogous to top-tier workspace platforms. This protocol strictly enforces a high-contrast warm monochrome palette, bespoke typographic hierarchies, meticulous structural macro-whitespace, bento-grid layouts, and an ultra-flat component architecture with deliberate muted pastel accents. It actively rejects standard generic SaaS design trends.
+This is a single aesthetic, described precisely: warm monochrome, high typographic contrast,
+generous structural whitespace, asymmetric bento grids, an almost entirely flat component layer,
+and muted pastels used only where colour carries meaning. Think a well-set document rather than a
+product landing page.
 
-## 2. Absolute Negative Constraints (Banned Elements)
-The AI must strictly avoid the following generic web development defaults:
+The constraints below are tight on purpose. The look collapses the moment a default creeps in —
+one `shadow-lg`, one Inter heading, one blue hero, and it reads as generic SaaS again. That is the
+reasoning behind each "avoid" here; where a constraint genuinely fights the brief, say so and
+adjust rather than shipping a half-committed version of two looks.
+
+## Fonts, honestly
+
+Several faces named below are commercial or platform-restricted — `SF Pro Display` is Apple
+platforms only, `Lyon Text` and `Switzer` are licensed, `Geist` and `Newsreader` and `Instrument
+Serif` are open. Check what the project can actually ship before writing a font stack, and always
+give a real fallback chain ending in `system-ui` / `serif` / `monospace`. A hero set in a font the
+user cannot license is a mockup, not an implementation.
+
+## Avoid these defaults
+
+They are what make an interface read as generic; each has a stated replacement:
 - DO NOT use the "Inter", "Roboto", or "Open Sans" typefaces.
 - DO NOT use generic, thin-line icon libraries like "Lucide", "Feather", or standard "Heroicons".
 - DO NOT use Tailwind's default heavy drop shadows (e.g., `shadow-md`, `shadow-lg`, `shadow-xl`). Shadows must be practically non-existent or heavily customized to be ultra-diffuse and low opacity (< 0.05).
@@ -83,3 +98,13 @@ When tasked with writing frontend code (HTML, React, Tailwind, Vue) or designing
 5. Add scroll-entry animations to all major content blocks.
 6. Ensure sections have visual depth through imagery, ambient gradients, or subtle textures — no empty flat backgrounds.
 7. Provide code that reflects this high-end, uncluttered, editorial aesthetic natively without requiring manual adjustments.
+
+---
+
+## Host compatibility
+
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.

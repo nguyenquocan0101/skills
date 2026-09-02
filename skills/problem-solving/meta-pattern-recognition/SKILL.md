@@ -1,5 +1,5 @@
 ---
-name: Meta-Pattern Recognition
+name: meta-pattern-recognition
 description: "Spot patterns appearing in 3+ domains to find universal principles"
 ---
 
@@ -52,3 +52,13 @@ When the same pattern appears in 3+ domains, it's probably a universal principle
 - Abstract form reveals new applications
 - Variations show adaptation points
 - Universal patterns are battle-tested across contexts
+
+---
+
+## Host compatibility
+
+Subagent, hook and task-list names in this workflow map differently per host — see
+`../../../references/host-compatibility.md` for the table (Antigravity, Claude Code, Codex, plain
+CLI) and `../../../agents/` for the subagent definitions. If something referenced here isn't
+available, do the equivalent step inline, keep the same artifacts and verification gates, and say
+in one line which fallback you used. Skipping a gate silently is the only unacceptable fallback.
