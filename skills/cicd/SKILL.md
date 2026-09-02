@@ -77,15 +77,18 @@ Ask via `ask the user directly` (both tracks, both modes — don't assume): shou
 
 ### Step 1 — Load the standard
 
-Read the bundled reference for the resolved track in full before touching any file. It is the
-single source of truth for that track's API and CLI specifics — improvising a deploy API call or a
-task name from memory is how a pipeline ends up green while nothing deployed.
+Read the reference skill for the resolved track in full before touching any file. It is the single
+source of truth for that track's API and CLI specifics — improvising a deploy API call or a task
+name from memory is how a pipeline ends up green while nothing actually deployed. Both ship
+alongside this one, so there is no excuse for working from memory.
 
-- **Dokploy track:** `references/dokploy.md` — pipeline stages, the Dokploy API call and its two
-  common failure modes, tagging and rollback, compose requirements, secrets, security and audit
-  checklists.
-- **Azure-K8s track:** `references/azure-k8s.md` — pipeline stages, kubectl vs Helm, manifest and
-  chart layout, image tagging, rollback commands, credentials, security and audit checklists.
+- **Dokploy track:** `../cicd-dokploy/SKILL.md` + every file in its `references/`
+  (`pipeline-stages.md`, `tagging-and-rollback.md`, `security-checklist.md`, `environments.md`).
+- **Azure-K8s track:** `../cicd-azure-k8s/SKILL.md` + every file in its `references/`
+  (`pipeline-stages.md`, `manifests-and-helm.md`, `rollback.md`, `security-checklist.md`).
+
+Those two skills own the track detail; this one owns the decision procedure and the audit. Never
+copy their specifics in here — a second copy is a copy that goes stale.
 
 ---
 
@@ -127,7 +130,7 @@ Common to both tracks:
 **If Dokploy track:**
 
 4. **`docker/docker-compose.prod.yml`** — `pull_policy: always`, log rotation (`max-size`/`max-file`), per-service memory limits via env-overridable vars, `HEALTHCHECK`, `restart: unless-stopped`, named external network if multiple repos share one VPS
-5. **`.github/workflows/docker-publish.yml`**: `validate` (lint/test, per Step 2.5) → `publish` (`needs: validate`; buildx → login → tag with `latest` + commit SHA, never only `latest` → push, retry once on failure → verify pullable) → `deploy` (`needs: publish`, **only if Step 0.6 resolved autodeploy**): **POST** `${{ secrets.DOKPLOY_URL }}/api/compose.deploy` with header `x-api-key: ${{ secrets.DOKPLOY_API_TOKEN }}` and body `{"composeId": "${{ secrets.DOKPLOY_COMPOSE_ID }}"}` — never the Deployments-tab Webhook URL (rejected with `{"message":"Branch Not Match"}`); capture HTTP status + body and fail on non-2xx (see `references/dokploy.md`, Stage 3). Then poll the health endpoint for ~3–4 minutes, fail loudly on timeout.
+5. **`.github/workflows/docker-publish.yml`**: `validate` (lint/test, per Step 2.5) → `publish` (`needs: validate`; buildx → login → tag with `latest` + commit SHA, never only `latest` → push, retry once on failure → verify pullable) → `deploy` (`needs: publish`, **only if Step 0.6 resolved autodeploy**): **POST** `${{ secrets.DOKPLOY_URL }}/api/compose.deploy` with header `x-api-key: ${{ secrets.DOKPLOY_API_TOKEN }}` and body `{"composeId": "${{ secrets.DOKPLOY_COMPOSE_ID }}"}` — never the Deployments-tab Webhook URL (rejected with `{"message":"Branch Not Match"}`); capture HTTP status + body and fail on non-2xx (see `../cicd-dokploy/references/pipeline-stages.md`, Stage 5 — it also documents why the Deployments-tab webhook URL and the webhook token both fail). Then poll the health endpoint for ~3–4 minutes, fail loudly on timeout.
 6. **`docker/README.md`** — secrets table (`DOCKER_USERNAME`, `DOCKER_PASSWORD`, plus `DOKPLOY_URL`/`DOKPLOY_API_TOKEN`/`DOKPLOY_COMPOSE_ID` only if autodeploy) and a "Deploy" section stating plainly whether deploy is automatic or manual (manual: document clicking "Deploy" in the Dokploy dashboard).
 
 If a known-good `docker-publish.yml` + `docker/README.md` pair already exists in another repo on this machine, use it as the shape to match — matching a working pipeline beats reconstructing one.
@@ -137,9 +140,9 @@ If a known-good `docker-publish.yml` + `docker/README.md` pair already exists in
 4. **Manifests or chart**, per Step 0.55's tool choice:
    - **kubectl** → `k8s/namespace.yaml`, `<service>-deployment.yaml` (pinned image tag substituted at deploy time, `readinessProbe`/`livenessProbe`, `resources.requests`/`limits`), `<service>-service.yaml`, `ingress.yaml`, `configmap.yaml`, a `secret.yaml` *template* (no real values committed).
    - **Helm** → `helm/<app>/Chart.yaml`, `values.yaml` + `values-staging.yaml`/`values-production.yaml`, `templates/` (`deployment.yaml` reading `{{ .Values.image.tag }}`, `service.yaml`, `ingress.yaml`, `configmap.yaml`, `secret.yaml`).
-   - See `references/azure-k8s.md` for the full layout and the kubectl-vs-Helm choice criteria.
-5. **`azure-pipelines.yml`** at the repo root: `trigger: branches: include: [main]` → `Validate` stage (lint/test per Step 2.5) → `Build` stage (`Docker@2 buildAndPush`, tags = `$(Build.BuildId)` + `latest`, registry via a Service Connection — never literal credentials) → `Deploy` stage (`needs: Build`, **only if Step 0.6 resolved autodeploy**): `KubernetesManifest@1` (kubectl) or `HelmDeploy@0` (Helm) with `--wait`, then `kubectl rollout status ... --timeout=180s` and a `curl` health check, fail loudly on timeout. See `references/azure-k8s.md` for the full stage shape.
-6. **`k8s/README.md`** (or `helm/<app>/README.md`) — variable-group/Service-Connection table (registry credentials, Kubernetes service connection) and a "Deploy" section stating whether deploy is automatic or manual, plus the exact rollback command for this deployment/release name (see the Rollback section of `references/azure-k8s.md`) — don't leave rollback as something to reconstruct mid-incident.
+   - See `../cicd-azure-k8s/references/manifests-and-helm.md` for the full layout and the kubectl-vs-Helm choice criteria.
+5. **`azure-pipelines.yml`** at the repo root: `trigger: branches: include: [main]` → `Validate` stage (lint/test per Step 2.5) → `Build` stage (`Docker@2 buildAndPush`, tags = `$(Build.BuildId)` + `latest`, registry via a Service Connection — never literal credentials) → `Deploy` stage (`needs: Build`, **only if Step 0.6 resolved autodeploy**): `KubernetesManifest@1` (kubectl) or `HelmDeploy@0` (Helm) with `--wait`, then `kubectl rollout status ... --timeout=180s` and a `curl` health check, fail loudly on timeout. See `../cicd-azure-k8s/references/pipeline-stages.md` for the full YAML shape.
+6. **`k8s/README.md`** (or `helm/<app>/README.md`) — variable-group/Service-Connection table (registry credentials, Kubernetes service connection) and a "Deploy" section stating whether deploy is automatic or manual, plus the exact rollback command for this deployment/release name (see `../cicd-azure-k8s/references/rollback.md`) — don't leave rollback as something to reconstruct mid-incident.
 
 Either track: if autodeploy, note that this CI-triggered `deploy` job/stage is the only redeploy trigger — don't let it race against an unrelated native auto-redeploy mechanism (Dokploy's own "Autodeploy" toggle) if one exists.
 
@@ -147,9 +150,9 @@ Either track: if autodeploy, note that this CI-triggered `deploy` job/stage is t
 
 ### Step 3b — Audit mode: Review + fix
 
-Walk the "Reviewing an existing pipeline" checklist from the resolved track's reference
-(`references/dokploy.md` or `references/azure-k8s.md`) against the target repo's actual files, plus
-these cross-track checks:
+Walk the "When reviewing an existing pipeline" checklist from the resolved track's reference skill
+(`../cicd-dokploy` or `../cicd-azure-k8s`) against the target repo's actual files, plus these
+cross-track checks — gaps seen in practice, not in the original skill text:
 
 - [ ] Confirm via Step 0.6 whether the user actually wants autodeploy or manual deploy here — don't assume from whatever the existing pipeline happens to do
 - [ ] **If autodeploy confirmed but `deploy` job/stage is missing/disabled** → gap; **if manual confirmed but a `deploy` job/stage exists anyway** → also a gap
@@ -189,8 +192,8 @@ threw in for free is what makes the real fix unmergeable.
 
 ## Related
 
-- Track standards: `references/dokploy.md` and `references/azure-k8s.md` — read the matching one in
-  Step 1. Track-specific detail lives there and is never duplicated into this file.
+- Track standards: `../cicd-dokploy/SKILL.md` and `../cicd-azure-k8s/SKILL.md` (+ their
+  `references/*.md`) — read the matching one in Step 1, never duplicated here.
 - Finalize agent: `git-manager` (definition in `../../agents/git-manager.md`)
 
 ## Host compatibility

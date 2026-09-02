@@ -19,7 +19,9 @@ CI/CD nobody asked for.
 | `plan` | Research, split into phases, red-team the plan, hand off to `cook` |
 | `cook` | Implement a plan phase by phase, with tests and review gates |
 | `fix` | Scout → diagnose → fix → review → finalize, for a specific bug |
-| `cicd` | Scaffold or audit a Docker → registry → deploy pipeline (Dokploy or Azure/K8s) |
+| `cicd` | Scaffold or audit a Docker → registry → deploy pipeline — decides the track, then defers to one of the two below |
+| `cicd-dokploy` | The GitHub Actions → DockerHub → Dokploy/VPS standard: stages, API deploy, tagging, rollback |
+| `cicd-azure-k8s` | The Azure DevOps → registry → Kubernetes standard: stages, manifests/Helm, rollout, rollback |
 | `frontend-mindset` | Product UI: app screens, dashboards, tables, forms, components — and reviewing them |
 | `design-taste-frontend` | Marketing surfaces: landing pages, portfolios, campaign sites, redesigns |
 | `minimalist-ui` | One specific look: warm monochrome, editorial, flat bento, document-style |
@@ -51,6 +53,10 @@ engineering and `minimalist-ui` for the visual language.
 5. If a referenced subagent, hook, task list or slash command isn't available on this host, do the
    equivalent step inline and say briefly which fallback you used — see
    `references/host-compatibility.md`.
+
+`cicd` is the entry point for pipeline work — it resolves the track and the mode, then reads the
+matching track skill in full. Go straight to `cicd-dokploy` or `cicd-azure-k8s` only when you
+already know the track and just want the standard.
 
 **Sequencing.** Novel or ambiguous feature: `brainstorm` → `plan` → `cook`. Already decided:
 `spec` or `plan` → `cook`. A specific bug: `fix` on its own. Blocked or the failure mode is

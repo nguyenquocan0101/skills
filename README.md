@@ -45,7 +45,7 @@ is still just `skills`.
 .agents/plugins/skills/
 ├── plugin.json
 ├── hooks.json          the simplify hook, read from here — your hooks.json is untouched
-├── skills/             the eleven workflows
+├── skills/             the thirteen workflows
 ├── agents/             the ten subagent definitions
 ├── hooks/              the hook script
 └── references/         shared contracts the workflows link to
@@ -109,7 +109,7 @@ workflow, which is the natural way to use this with Codex or any agent you hand 
 plugin.json         Antigravity plugin manifest
 hooks.json          plugin-level hook config (the simplify trigger)
 SKILL.md            dispatcher — routes to one workflow, for repo-level use
-skills/             the eleven workflows
+skills/             the thirteen workflows
 agents/             ten subagent definitions the workflows spawn
 hooks/              the simplify trigger script
 references/         shared contracts every workflow agrees on
@@ -125,7 +125,9 @@ bin/install.js      the installer
 | `plan` | Research, split into phases, red-team the plan, hand off to `cook` |
 | `cook` | Implement a plan phase by phase, with test and review gates |
 | `fix` | Scout → diagnose → fix → review → finalize, for a specific bug |
-| `cicd` | Scaffold or audit a Docker → registry → deploy pipeline (Dokploy or Azure/K8s) |
+| `cicd` | Scaffold or audit a Docker → registry → deploy pipeline; resolves the track, then defers |
+| `cicd-dokploy` | The GitHub Actions → DockerHub → Dokploy/VPS standard |
+| `cicd-azure-k8s` | The Azure DevOps → registry → Kubernetes standard |
 | `frontend-mindset` | Product UI: app screens, dashboards, tables, forms — and reviewing them |
 | `design-taste-frontend` | Marketing surfaces: landing pages, portfolios, campaign sites, redesigns |
 | `minimalist-ui` | One specific look: warm monochrome, editorial, flat bento, document-style |
