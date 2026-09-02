@@ -9,7 +9,7 @@ plain CLI agents. Nothing here needs a particular host to be useful: the reasoni
 and the host-specific machinery is an integration point each workflow tells you how to replace.
 
 ```bash
-npx github:nguyenquocan0101/bbskills install
+npx github:nguyenquocan0101/skills install
 ```
 
 That's it for a project already using Antigravity. It lands as a plugin — one folder at
@@ -23,22 +23,25 @@ your next session. Nothing you already have is modified.
 ### From GitHub
 
 ```bash
-npx github:nguyenquocan0101/bbskills install      # this project
-npx github:nguyenquocan0101/bbskills install -g   # every project
+npx github:nguyenquocan0101/skills install      # this project only
+npx github:nguyenquocan0101/skills install -g   # every project
 ```
 
-The repo is still named `bbskills` even though the plugin is called `skills`; use the name the
-repo actually has today, or `npx` fails with nothing on stdout, which looks like a no-op rather
-than an error. After renaming the repo on GitHub the spec becomes
-`github:nguyenquocan0101/skills` — GitHub redirects the old name, so both keep working.
+`-g` installs into `~/.gemini/config/plugins/skills/`, which Antigravity reads for every
+workspace — so nothing appears inside the project, by design. Drop `-g` to get
+`.agents/plugins/skills/` in the project instead. Pick one; installing both makes every skill
+show up twice.
+
+A note on `npx` and a wrong repo name: it prints **nothing at all** and exits, which reads as a
+successful no-op rather than an error. If a spec produces no output, the repo path is wrong.
 
 ### From a local clone
 
 Nothing to publish, nothing to fetch — and the only method that works offline:
 
 ```bash
-git clone https://github.com/nguyenquocan0101/bbskills.git
-node bbskills/bin/install.js install
+git clone https://github.com/nguyenquocan0101/skills.git
+node skills/bin/install.js install
 ```
 
 If you already have the repo somewhere, point at it directly. From the project you want it in:
@@ -47,22 +50,15 @@ If you already have the repo somewhere, point at it directly. From the project y
 node "W:/path/to/skills/bin/install.js" install
 ```
 
-### From npm
-
-Not published yet. When it is, the package will be **scoped** — the bare name `skills` is taken on
-npm by an unrelated package, so `npx skills` fetches *that* one, not this:
-
-```bash
-npx @nguyenquocan0101/skills install
-npm i -g @nguyenquocan0101/skills && skills install
-```
-
 ### Uninstall
 
 ```bash
-skills uninstall          # if installed globally
-node <repo>/bin/install.js uninstall
+npx github:nguyenquocan0101/skills uninstall      # project install
+npx github:nguyenquocan0101/skills uninstall -g   # global install
 ```
+
+Pass the same `-g` you installed with, or it looks in the wrong place and reports nothing to
+remove.
 
 ### Where it goes
 
