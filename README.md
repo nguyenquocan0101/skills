@@ -9,7 +9,7 @@ plain CLI agents. Nothing here needs a particular host to be useful: the reasoni
 and the host-specific machinery is an integration point each workflow tells you how to replace.
 
 ```bash
-npx github:nguyenquocan0101/skills install
+npx github:nguyenquocan0101/bbskills install
 ```
 
 That's it for a project already using Antigravity. It lands as a plugin — one folder at
@@ -20,24 +20,49 @@ your next session. Nothing you already have is modified.
 
 ## Install
 
-### The short version
+### From GitHub
 
 ```bash
-npx github:nguyenquocan0101/skills install      # this project
-npx github:nguyenquocan0101/skills install -g   # every project
-npx github:nguyenquocan0101/skills uninstall    # remove it again
+npx github:nguyenquocan0101/bbskills install      # this project
+npx github:nguyenquocan0101/bbskills install -g   # every project
 ```
 
-Once published to npm:
+The repo is still named `bbskills` even though the plugin is called `skills`; use the name the
+repo actually has today, or `npx` fails with nothing on stdout, which looks like a no-op rather
+than an error. After renaming the repo on GitHub the spec becomes
+`github:nguyenquocan0101/skills` — GitHub redirects the old name, so both keep working.
+
+### From a local clone
+
+Nothing to publish, nothing to fetch — and the only method that works offline:
+
+```bash
+git clone https://github.com/nguyenquocan0101/bbskills.git
+node bbskills/bin/install.js install
+```
+
+If you already have the repo somewhere, point at it directly. From the project you want it in:
+
+```bash
+node "W:/path/to/skills/bin/install.js" install
+```
+
+### From npm
+
+Not published yet. When it is, the package will be **scoped** — the bare name `skills` is taken on
+npm by an unrelated package, so `npx skills` fetches *that* one, not this:
 
 ```bash
 npx @nguyenquocan0101/skills install
 npm i -g @nguyenquocan0101/skills && skills install
 ```
 
-The package is scoped because the bare name `skills` is already taken on npm by an unrelated
-package — `npx skills` would fetch **that** one, so don't use it. The command the package installs
-is still just `skills`.
+### Uninstall
+
+```bash
+skills uninstall          # if installed globally
+node <repo>/bin/install.js uninstall
+```
 
 ### Where it goes
 
@@ -60,6 +85,12 @@ workflows keeps resolving, and uninstalling is deleting one directory.
 If your project uses the older `.agent/` or `_agents/` customization root, the installer reuses
 whichever one is already there instead of creating a second one beside it.
 
+The hook is a Python script, and the installer writes whichever interpreter it finds into
+`hooks.json` — `python3` on Linux and macOS, `py -3` or `python` on Windows, which is where a
+hardcoded `python3` would otherwise fail silently. If no interpreter is on PATH the install still
+succeeds and says so; the hook simply never fires until you install Python or rerun with
+`--python <command>`.
+
 ### Options
 
 ```
@@ -72,6 +103,7 @@ skills install [options]
   --target <dir>    explicit install root, overriding --host/--global
   --skills a,b,c    only these workflows (default: all)
   --no-hooks        skip the simplify hook
+  --python <cmd>    interpreter for the hook (default: detected)
   --force, -f       overwrite files that already exist
   --dry-run, -n     print what would happen, change nothing
 

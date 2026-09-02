@@ -1,10 +1,10 @@
 {
   "name": "@nguyenquocan0101/skills",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Portable agent skill collection: brainstorm, spec, plan, cook, fix, cicd, frontend design, problem solving — with subagent definitions and an Antigravity hook",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nguyenquocan0101/skills.git"
+    "url": "git+https://github.com/nguyenquocan0101/bbskills.git"
   },
   "license": "MIT AND Apache-2.0",
   "files": [

@@ -22,6 +22,7 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const { spawnSync } = require("child_process");
 
 const SRC = path.resolve(__dirname, "..");
 const PLUGIN_NAME = "skills";
@@ -44,6 +45,7 @@ function parseArgs(argv) {
     dryRun: false,
     force: false,
     hooks: true,
+    python: null,
   };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
@@ -58,6 +60,7 @@ function parseArgs(argv) {
     else if (a === "--dry-run" || a === "-n") opts.dryRun = true;
     else if (a === "--force" || a === "-f") opts.force = true;
     else if (a === "--no-hooks") opts.hooks = false;
+    else if (a === "--python") opts.python = argv[++i];
     else if (a === "--help" || a === "-h") opts.command = "help";
     else rest.push(a);
   }
@@ -149,8 +152,31 @@ function apply(plan, opts) {
 
 // -------------------------------------------------------------------- hooks
 
+/**
+ * Find an interpreter that actually exists on this machine. `python3` is the Linux and
+ * macOS spelling; a default Windows install gives you `python` and the `py` launcher and
+ * no `python3` at all, so a hook hardcoding `python3` fails silently there — the agent
+ * loop swallows it and the simplify pass just never happens.
+ */
+function detectPython(explicit) {
+  const candidates = explicit
+    ? [explicit]
+    : process.platform === "win32"
+    ? ["py -3", "python", "python3"]
+    : ["python3", "python"];
+  for (const cand of candidates) {
+    const parts = cand.split(" ");
+    const r = spawnSync(parts[0], parts.slice(1).concat("--version"), {
+      stdio: "ignore",
+      shell: process.platform === "win32",
+    });
+    if (r.status === 0) return { cmd: cand, found: true };
+  }
+  return { cmd: candidates[0], found: false };
+}
+
 /** Rewrite the hook command so it points at the script this install actually placed. */
-function hookConfig(dest, cwd, workspaceRelativeScript) {
+function hookConfig(dest, cwd, workspaceRelativeScript, python) {
   const cfg = JSON.parse(fs.readFileSync(path.join(SRC, "hooks", "hooks.json"), "utf8"));
   const walk = (node) => {
     if (Array.isArray(node)) return node.forEach(walk);
@@ -158,7 +184,7 @@ function hookConfig(dest, cwd, workspaceRelativeScript) {
       if (typeof node.command === "string") {
         node.command = node.command.replace(
           /python3 \S*simplify_trigger\.py/,
-          `python3 ${workspaceRelativeScript}`
+          `${python} ${workspaceRelativeScript}`
         );
       }
       Object.values(node).forEach(walk);
@@ -170,12 +196,13 @@ function hookConfig(dest, cwd, workspaceRelativeScript) {
 
 function writeHooks(dest, opts, cwd) {
   if (dest.noHooks || !opts.hooks) return null;
+  const python = detectPython(opts.python);
 
   const scriptAbs = path.join(dest.root, "hooks", "simplify_trigger.py");
   // Inside a workspace, a relative path keeps the config portable across machines.
   const rel = path.relative(cwd, scriptAbs).split(path.sep).join("/");
   const scriptRef = !rel.startsWith("..") && !path.isAbsolute(rel) ? rel : `"${scriptAbs}"`;
-  const incoming = hookConfig(dest, cwd, scriptRef);
+  const incoming = hookConfig(dest, cwd, scriptRef, python.cmd);
 
   // Plugin layout: the plugin owns its own hooks.json, so nothing of yours is touched.
   const target = dest.hooksAtRoot
@@ -198,7 +225,7 @@ function writeHooks(dest, opts, cwd) {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, JSON.stringify(Object.assign(current, incoming), null, 2) + "\n", "utf8");
   }
-  return { status: existed && !dest.hooksAtRoot ? "merged" : "written", target };
+  return { status: existed && !dest.hooksAtRoot ? "merged" : "written", target, python };
 }
 
 // ---------------------------------------------------------------- commands
@@ -218,6 +245,7 @@ Options
   --target <dir>    explicit install root, overriding --host/--global
   --skills a,b,c    only these workflows (default: all)
   --no-hooks        skip the simplify hook
+  --python <cmd>    interpreter for the hook (default: detected)
   --force, -f       overwrite files that already exist
   --dry-run, -n     print what would happen, change nothing
 
@@ -284,6 +312,14 @@ function install(opts, cwd) {
     if (hooks.status === "already-present") console.log(`  hooks.json: "${hooks.key}" already configured, left alone`);
     else if (hooks.status === "unparseable") console.log(`  hooks.json: your existing file is not valid JSON — not touched`);
     else console.log(`  hooks.json: ${hooks.status} at ${hooks.target}`);
+    if (hooks.python) {
+      if (hooks.python.found) console.log(`  python: "${hooks.python.cmd}" (detected)`);
+      else
+        console.log(
+          `  python: none found on PATH — hook commands left as "${hooks.python.cmd}". ` +
+            `Install Python or rerun with --python <command>, or the simplify hook will never fire.`
+        );
+    }
     console.log(`  verify the PostToolUse matcher against your build's edit-tool names (hooks/README.md)`);
   } else if (host === "claude") {
     console.log(`  hooks: skipped — Claude Code has no PostInvocation event (hooks/README.md has the Stop-based wiring)`);
