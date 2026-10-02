@@ -9,7 +9,7 @@
  * resolves unchanged, because the folder structure is identical to the source.
  *
  * It also means the install touches nothing you already have: no merging into your
- * `.agents/hooks.json`, no mixing skills' eleven skills into `.agents/skills/`
+ * `.agents/hooks.json`, no mixing the thirteen skills into `.agents/skills/`
  * beside your own. Uninstall is `rm -rf .agents/plugins/skills`.
  *
  *   npx skills install
@@ -23,6 +23,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { spawnSync } = require("child_process");
+const ui = require("./ui");
 
 const SRC = path.resolve(__dirname, "..");
 const PLUGIN_NAME = "skills";
@@ -46,6 +47,7 @@ function parseArgs(argv) {
     force: false,
     hooks: true,
     python: null,
+    anim: true,
   };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
@@ -61,6 +63,7 @@ function parseArgs(argv) {
     else if (a === "--force" || a === "-f") opts.force = true;
     else if (a === "--no-hooks") opts.hooks = false;
     else if (a === "--python") opts.python = argv[++i];
+    else if (a === "--no-anim") opts.anim = false;
     else if (a === "--help" || a === "-h") opts.command = "help";
     else rest.push(a);
   }
@@ -69,7 +72,8 @@ function parseArgs(argv) {
 }
 
 const fail = (msg) => {
-  console.error(`skills: ${msg}`);
+  ui.showCursor();
+  console.error(`\n  ${ui.c.red(ui.G.fail)} skills: ${msg}\n`);
   process.exit(1);
 };
 
@@ -102,7 +106,7 @@ function resolveDest(host, opts, cwd) {
 
   if (opts.target) {
     const root = path.resolve(opts.target);
-    return { layout, root, hooksAtRoot: layout === "plugin" };
+    return { layout, root, hooksAtRoot: layout === "plugin", noHooks: host !== "antigravity" };
   }
 
   if (host === "antigravity") {
@@ -133,7 +137,7 @@ function collect(from, to, plan) {
   }
 }
 
-function apply(plan, opts) {
+function apply(plan, opts, transform) {
   let written = 0;
   let skipped = 0;
   for (const [src, dst] of plan) {
@@ -143,11 +147,53 @@ function apply(plan, opts) {
     }
     if (!opts.dryRun) {
       fs.mkdirSync(path.dirname(dst), { recursive: true });
-      fs.copyFileSync(src, dst);
+      const changed = transform && transform(src, fs.readFileSync(src, "utf8"));
+      if (typeof changed === "string") fs.writeFileSync(dst, changed, "utf8");
+      else fs.copyFileSync(src, dst);
     }
     written++;
   }
   return { written, skipped };
+}
+
+/**
+ * The agents declare Antigravity tool names (`view_file`, `grep_search`, `run_command`). Claude
+ * Code reads `tools` too, and an allowlist of names it doesn't know leaves the agent with no tools
+ * at all — so on that host the list is rewritten to Claude Code's read-only equivalents.
+ */
+function agentTransformFor(host) {
+  if (host !== "claude") return null;
+  return (src, text) =>
+    src.endsWith(".md") ? text.replace(/^tools:\n(?:[ \t]+-[^\n]*\n)+/m, "tools: Read, Grep, Glob, Bash\n") : null;
+}
+
+/** First clause of a skill's description, for the one-line catalogue. */
+function tagline(skill) {
+  try {
+    const text = fs.readFileSync(path.join(SRC, "skills", skill, "SKILL.md"), "utf8");
+    const m = text.match(/^description:\s*"?(.*?)"?\s*$/m);
+    if (!m) return "";
+    // Shortest leading clause: stop at the first sentence end, colon, comma, dash or parenthesis.
+    return m[1].replace(/\\"/g, '"').split(/(?<=[a-z)])\. |: |, | — | - | \(/)[0].replace(/\.$/, "");
+  } catch (e) {
+    return "";
+  }
+}
+
+/** Inside the project, show the short relative path; elsewhere, abbreviate the home directory. */
+function displayPath(p, cwd) {
+  const rel = path.relative(cwd, p);
+  if (rel && !rel.startsWith("..") && !path.isAbsolute(rel)) return rel.split(path.sep).join("/");
+  const home = os.homedir();
+  return p.startsWith(home) ? "~" + p.slice(home.length).split(path.sep).join("/") : p;
+}
+
+function pkgVersion() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(SRC, "package.json"), "utf8")).version;
+  } catch (e) {
+    return "?";
+  }
 }
 
 // -------------------------------------------------------------------- hooks
@@ -233,9 +279,9 @@ function writeHooks(dest, opts, cwd) {
 function help() {
   console.log(`skills — install agent workflows into your project
 
-  npx skills install [options]
-  npx skills uninstall
-  npx skills list
+  npx github:nguyenquocan0101/skills install [options]
+  npx github:nguyenquocan0101/skills uninstall [-g]
+  npx github:nguyenquocan0101/skills list
 
 Options
   --host <name>     antigravity | claude | codex   (default: auto-detect)
@@ -248,6 +294,7 @@ Options
   --python <cmd>    interpreter for the hook (default: detected)
   --force, -f       overwrite files that already exist
   --dry-run, -n     print what would happen, change nothing
+  --no-anim         plain output, no animation (also: SKILLS_NO_ANIM=1, NO_COLOR=1)
 
 Default install (Antigravity, this project)
 
@@ -260,84 +307,132 @@ Default install (Antigravity, this project)
 `);
 }
 
-function uninstall(opts, cwd) {
+function list() {
+  const { c } = ui;
+  ui.log();
+  for (const s of ALL_SKILLS) ui.log(`  ${c.bold(s.padEnd(22))}${c.gray(tagline(s))}`);
+  ui.log();
+}
+
+async function uninstall(opts, cwd) {
   const host = opts.host || detectHost(cwd);
   const dest = resolveDest(host, opts, cwd);
   if (dest.layout !== "plugin") {
     fail("uninstall only handles the plugin layout — remove the copied files by hand for --flat");
   }
+  ui.log();
   if (!fs.existsSync(dest.root)) {
-    console.log(`skills: nothing installed at ${dest.root}`);
+    ui.info(`nothing installed at ${dest.root}`);
+    ui.log();
     return;
   }
-  if (!opts.dryRun) fs.rmSync(dest.root, { recursive: true, force: true });
-  console.log(`skills: ${opts.dryRun ? "would remove" : "removed"} ${dest.root}`);
+  await ui.spin(
+    `${opts.dryRun ? "Would remove" : "Removing"} ${displayPath(dest.root, cwd)}`,
+    () => { if (!opts.dryRun) fs.rmSync(dest.root, { recursive: true, force: true }); },
+    opts.dryRun ? "dry run" : "done"
+  );
+  ui.log();
 }
 
-function install(opts, cwd) {
-  const host = opts.host || detectHost(cwd);
+async function install(opts, cwd) {
+  const { c, G } = ui;
+  await ui.banner(pkgVersion(), "agent workflows · brainstorm → plan → cook → fix");
+
+  const host = await ui.spin("Detecting host", () => opts.host || detectHost(cwd), (h) => (opts.host ? h : `${h} (auto)`));
   const dest = resolveDest(host, opts, cwd);
   const skills = opts.skills || ALL_SKILLS;
   for (const s of skills) {
-    if (!ALL_SKILLS.includes(s)) fail(`no such workflow "${s}" — run \`npx skills list\``);
+    if (!ALL_SKILLS.includes(s)) fail(`no such workflow "${s}" — run \`list\` to see them`);
   }
+  const shown = displayPath(dest.root, cwd);
+  ui.info(`${dest.layout} layout ${G.arrow} ${c.cyan(shown)}`);
+  if (opts.dryRun) ui.note("dry run — nothing will be written");
 
-  const plan = [];
-  for (const s of skills) collect(path.join(SRC, "skills", s), path.join(dest.root, "skills", s), plan);
-  collect(path.join(SRC, "references"), path.join(dest.root, "references"), plan);
-  collect(path.join(SRC, "agents"), path.join(dest.root, "agents"), plan);
-  if (!dest.noHooks && opts.hooks) {
-    collect(path.join(SRC, "hooks"), path.join(dest.root, "hooks"), plan);
+  let written = 0;
+  let skipped = 0;
+  const tally = (r) => { written += r.written; skipped += r.skipped; return r; };
+  const describe = (r) =>
+    r.skipped && !r.written ? "already there" : `${r.written} file(s)` + (r.skipped ? `, ${r.skipped} kept` : "");
+
+  ui.section(`Workflows (${skills.length})`);
+  const bar = ui.progress(skills.length, "workflows");
+  for (const s of skills) {
+    const plan = [];
+    collect(path.join(SRC, "skills", s), path.join(dest.root, "skills", s), plan);
+    const r = tally(apply(plan, opts));
+    await bar.row(r.written ? "ok" : "skip", s, tagline(s));
   }
+  bar.end();
+
+  ui.section("Support");
+  await ui.spin("Subagents", () => {
+    const plan = [];
+    collect(path.join(SRC, "agents"), path.join(dest.root, "agents"), plan);
+    return tally(apply(plan, opts, agentTransformFor(host)));
+  }, (r) => describe(r) + (host === "claude" ? " · tools mapped to Read/Grep/Glob/Bash" : ""));
+
+  await ui.spin("Shared references", () => {
+    const plan = [];
+    collect(path.join(SRC, "references"), path.join(dest.root, "references"), plan);
+    return tally(apply(plan, opts));
+  }, describe);
+
   if (dest.layout === "plugin") {
-    plan.push([path.join(SRC, "plugin.json"), path.join(dest.root, "plugin.json")]);
-    plan.push([path.join(SRC, "SKILL.md"), path.join(dest.root, "SKILL.md")]);
-    plan.push([path.join(SRC, "README.md"), path.join(dest.root, "README.md")]);
-    plan.push([path.join(SRC, "LICENSE"), path.join(dest.root, "LICENSE")]);
-    plan.push([path.join(SRC, "NOTICE.md"), path.join(dest.root, "NOTICE.md")]);
+    await ui.spin("Plugin manifest", () => {
+      const plan = ["plugin.json", "SKILL.md", "README.md", "LICENSE", "NOTICE.md"].map((f) => [
+        path.join(SRC, f),
+        path.join(dest.root, f),
+      ]);
+      return tally(apply(plan, opts));
+    }, describe);
   }
 
-  const { written, skipped } = apply(plan, opts);
-  const hooks = writeHooks(dest, opts, cwd);
-
-  const verb = opts.dryRun ? "would install" : "installed";
-  console.log(`skills: ${verb} ${skills.length} workflow(s) -> ${dest.root}`);
-  console.log(`  host ${host}, ${dest.layout} layout`);
-  console.log(
-    `  ${written} file(s) ${opts.dryRun ? "to write" : "written"}` +
-      (skipped ? `, ${skipped} left alone (already there — --force to overwrite)` : "")
-  );
-
-  if (hooks) {
-    if (hooks.status === "already-present") console.log(`  hooks.json: "${hooks.key}" already configured, left alone`);
-    else if (hooks.status === "unparseable") console.log(`  hooks.json: your existing file is not valid JSON — not touched`);
-    else console.log(`  hooks.json: ${hooks.status} at ${hooks.target}`);
-    if (hooks.python) {
-      if (hooks.python.found) console.log(`  python: "${hooks.python.cmd}" (detected)`);
-      else
-        console.log(
-          `  python: none found on PATH — hook commands left as "${hooks.python.cmd}". ` +
-            `Install Python or rerun with --python <command>, or the simplify hook will never fire.`
-        );
-    }
-    console.log(`  verify the PostToolUse matcher against your build's edit-tool names (hooks/README.md)`);
-  } else if (host === "claude") {
-    console.log(`  hooks: skipped — Claude Code has no PostInvocation event (hooks/README.md has the Stop-based wiring)`);
+  let hooks = null;
+  if (!dest.noHooks && opts.hooks) {
+    hooks = await ui.spin("Simplify hook", () => {
+      const plan = [];
+      collect(path.join(SRC, "hooks"), path.join(dest.root, "hooks"), plan);
+      tally(apply(plan, opts));
+      return writeHooks(dest, opts, cwd);
+    }, (h) => {
+      if (!h) return "skipped";
+      if (h.status === "already-present") return `"${h.key}" already configured`;
+      if (h.status === "unparseable") return "your hooks.json is not valid JSON — not touched";
+      return `${h.status} · python: ${h.python.found ? h.python.cmd : "not found"}`;
+    });
   }
 
+  // ------------------------------------------------------------ summary
+  const lines = [
+    `${c.bold(String(skills.length))} workflows ${G.dot} ${c.bold(String(written))} file(s) ${opts.dryRun ? "to write" : "written"}` +
+      (skipped ? ` ${G.dot} ${skipped} kept (--force to overwrite)` : ""),
+    `${c.gray("where")}  ${shown}`,
+  ];
+  if (host === "antigravity" && dest.layout === "plugin") {
+    lines.push(`${c.gray("try")}    /${PLUGIN_NAME}:brainstorm  /${PLUGIN_NAME}:plan  /${PLUGIN_NAME}:fix`);
+  }
   if (!opts.dryRun) {
-    console.log(`\nStart a new agent session so the host re-scans its customizations.`);
-    if (dest.layout === "plugin") console.log("Uninstall with: skills uninstall (or rerun this installer with the uninstall command)");
+    lines.push(`${c.gray("next")}   start a new agent session so the host re-scans its customizations`);
+    if (hooks && hooks.python && !hooks.python.found) {
+      lines.push(`${c.yellow("hook")}   no Python on PATH — install it or rerun with --python <cmd>`);
+    } else if (hooks) {
+      lines.push(`${c.gray("check")}  after an edit, .skills/simplify-state.json should exist`);
+    } else if (host === "claude") {
+      lines.push(`${c.gray("hook")}   skipped on Claude Code — see hooks/README.md for Stop-based wiring`);
+    }
+    if (dest.layout === "plugin") lines.push(`${c.gray("remove")} rerun with the uninstall command${opts.global ? " -g" : ""}`);
   }
+  ui.box(opts.dryRun ? "Dry run complete" : "Installed", lines, opts.dryRun ? "yellow" : "green");
 }
 
-function main() {
+async function main() {
   const opts = parseArgs(process.argv.slice(2));
+  if (!opts.anim) ui.disableAnimation();
   const cwd = process.cwd();
   if (opts.command === "help") return help();
-  if (opts.command === "list") return console.log(ALL_SKILLS.join("\n"));
+  if (opts.command === "list") return list();
   if (opts.command === "uninstall") return uninstall(opts, cwd);
   return install(opts, cwd);
 }
 
-main();
+main().catch((err) => fail(err && err.message ? err.message : String(err)));
