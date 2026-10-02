@@ -1,8 +1,3 @@
----
-name: collision-zone-thinking
-description: "Force unrelated concepts together to discover emergent properties - \"What if we treated X like Y?\""
----
-
 # Collision-Zone Thinking
 
 ## Overview

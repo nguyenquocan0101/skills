@@ -1,6 +1,6 @@
 ---
 name: project-manager
-description: "Sync plan and phase files with what was actually implemented: check off phases, update status, flag drift. Spawned by `cook` Step 5 and `fix` Step 4."
+description: "Sync plan and phase files with what was actually implemented: check off phases, update status, flag drift. Spawned by `cook` Step 5 and `fix` Step 5."
 mainAgent: false
 subagent: true
 ---

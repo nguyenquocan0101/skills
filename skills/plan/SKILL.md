@@ -102,9 +102,25 @@ Write this line into the `plan.md` header block immediately after the `Mode:` li
 
 ---
 
+### Step 1.5 — Edge Cases (scenario)
+
+**Runs when** `--tdd` is set or Step 0.5 classified the work `high-risk`; otherwise skip (and
+always skip in `--fast`).
+
+Run the **`scenario`** skill once (one-shot; `--saturation` only if the user asked for exhaustive
+coverage) on the spec, or on the feature description plus research reports when there is no spec.
+It writes `plans/{slug}/scenarios.md`. Only its CRITICAL and HIGH rows travel further — the rest
+stay in the file for whoever wants them.
+
+```
+// Scenarios: 14 (2 CRITICAL, 4 HIGH) → plans/{slug}/scenarios.md
+```
+
+---
+
 ### Step 2 — Plan Creation
 
-Spawn the **`planner` agent** with: feature description + mode + research reports + test flag + spec file path (if any).
+Spawn the **`planner` agent** with: feature description + mode + research reports + test flag + spec file path (if any) + `scenarios.md` path (if Step 1.5 ran).
 
 **After planner returns**: capture the plan directory path from its `Directory: plans/{slug}/` line — you'll need it in Step 3.
 
@@ -228,12 +244,12 @@ For each phase, include:
 - Tests and acceptance criteria
 - Risks, decisions, or open questions
 
-Use this format:
+Use this format, writing the content in the user's language:
 
 ```
 ## Phase 01 — {name}
-Mục tiêu: {objective}
-Phạm vi:
+Objective: {objective}
+Scope:
 - {task or scope item}
 
 Files/modules: {files or modules}
@@ -253,6 +269,7 @@ fact explicitly instead of fabricating a summary.
 | --------------- | ---- | ---------------------------------------------------------- |
 | `researcher`    | 1    | `--auto` (×1), `--hard`/`--parallel`/`--two` (×2 parallel) |
 | `planner`       | 2    | All                                                        |
+| `scenario` skill | 1.5 | `--tdd` or `Risk: high-risk` (never `--fast`)              |
 | `plan-reviewer` | 3    | All except `--fast`                                        |
 
 Definitions for these roles ship in `../../agents/` — copy them to `.agents/agents/`

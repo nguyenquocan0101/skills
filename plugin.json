@@ -1,5 +1,5 @@
 {
   "name": "skills",
-  "description": "Agent workflows for brainstorming, spec writing, planning, implementation, debugging, CI/CD, frontend design and problem solving, with the subagents and simplify hook they depend on.",
-  "version": "0.4.2"
+  "description": "Agent workflows for brainstorming, spec writing, edge-case discovery, planning, implementation, debugging, recaps, CI/CD, frontend design and problem solving, with the subagents and simplify hook they depend on.",
+  "version": "0.5.0"
 }

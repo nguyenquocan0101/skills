@@ -22,7 +22,9 @@ Write to `plans/{slug}/`:
 Each phase file carries: objective, scope as concrete tasks, files and modules affected,
 dependencies on other phases, tests and measurable acceptance criteria, risks and open questions.
 When a spec was provided, map each phase to the P1/P2/P3 stories it covers. With `--tdd`, add a
-`### Tests to Write First` section derived from the spec's acceptance criteria. With `--parallel`,
+`### Tests to Write First` section derived from the spec's acceptance criteria. When
+`plans/{slug}/scenarios.md` exists, every CRITICAL and HIGH row must land in some phase — as an
+acceptance criterion, or as a test to write first under `--tdd`. With `--parallel`,
 add a `## File Ownership` section listing the files that phase owns exclusively — overlapping
 ownership between phases is a planning bug, not something to resolve at implementation time.
 

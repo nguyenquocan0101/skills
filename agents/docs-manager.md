@@ -1,6 +1,6 @@
 ---
 name: docs-manager
-description: "Update README, API docs and runbooks when a change alters a public contract. Spawned by `cook` Step 5 and `fix` Step 4."
+description: "Update README, API docs and runbooks when a change alters a public contract. Spawned by `cook` Step 5 and `fix` Step 5."
 mainAgent: false
 subagent: true
 ---

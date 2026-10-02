@@ -1,4 +1,4 @@
-# Artifact layout — the contract `brainstorm`, `spec`, `plan` and `cook` share
+# Artifact layout — the contract `brainstorm`, `spec`, `scenario`, `plan` and `cook` share
 
 Every workflow in this collection reads and writes the same files. When one of them invents its
 own path the chain silently breaks: `plan` looks for a spec that `brainstorm` wrote somewhere
@@ -17,6 +17,7 @@ that needs a new artifact adds it here rather than inventing a variant.
       YYMMDD-{slug}-brainstorm.md
     {slug}/
       spec.md             <- brainstorm or spec writes this
+      scenarios.md        <- scenario writes this (plan Step 1.5); planner and tester read it
       plan.md             <- plan writes this (all modes except --two)
       plan-a.md           <- --two only, merged into plan.md after the user picks
       plan-b.md           <- --two only

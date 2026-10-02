@@ -3,6 +3,10 @@ name: plan-reviewer
 description: "Red-team a plan before implementation starts: missing phases, wrong ordering, unverifiable criteria, hidden risk. Spawned by the `plan` skill in Step 3."
 mainAgent: false
 subagent: true
+tools:
+  - view_file
+  - grep_search
+  - run_command
 ---
 
 # plan-reviewer
@@ -18,6 +22,7 @@ actually die of:
 - The migration, rollback, or data-backfill step that nobody wrote down.
 - Scope that grew past what the spec asked for.
 - A spec story with no phase covering it, or a phase covering nothing in the spec.
+- A CRITICAL or HIGH row in `scenarios.md` (when present) that no phase covers.
 - `--parallel` only: two phases claiming the same file in `## File Ownership`.
 
 Grade findings with the severity levels in `../references/review-rubric.md`. For each, name the file,

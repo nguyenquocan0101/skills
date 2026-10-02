@@ -456,6 +456,11 @@ If you're in Cowork, the main things to know are:
 
 ---
 
+## Antigravity-Specific Instructions
+Added for this collection: on Antigravity read `references/antigravity.md` — test runs and packaging work; description optimization needs `claude -p`, so tune by hand.
+
+---
+
 ## Reference files
 
 The agents/ directory contains instructions for specialized subagents. Read them when you need to spawn the relevant subagent.

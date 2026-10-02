@@ -29,7 +29,7 @@ Wait for their answer. Understand their mental model before adding yours.
 
 ### Step 1 — Draw Out Ideas
 
-Use `ask the user directly` to surface the user's thinking. Ask 1–2 questions per turn — never all at once.
+Ask the user directly to surface the user's thinking. Ask 1–2 questions per turn — never all at once.
 
 Focus on **generative** questions:
 
@@ -51,7 +51,7 @@ Loop until the idea space feels explored and the user has expressed a preference
 
 ### Step 2 — Scout (Only If Needed)
 
-If a specific question from Step 1 requires codebase context, spawn 1–2 targeted **`Explore` sub-agents** inline.
+If a specific question from Step 1 requires codebase context, run 1–2 targeted, read-only searches — a `scout` subagent if the host has one, otherwise inline.
 
 ```
 // Scout is optional and reactive, not automatic.
@@ -149,7 +149,7 @@ in-context memory. See `../../references/artifact-layout.md` for the full artifa
 
 ### Step 6 — Handoff
 
-Ask via `ask the user directly`:
+Ask the user:
 
 **"Spec written at `plans/{slug}/spec.md`. What next?"**
 - `→ `plan` plans/{slug}/spec.md` — proceed to planning

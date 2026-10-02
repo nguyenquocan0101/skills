@@ -102,10 +102,16 @@ skills install [options]
   --python <cmd>    interpreter for the hook (default: detected)
   --force, -f       overwrite files that already exist
   --dry-run, -n     print what would happen, change nothing
+  --no-anim         plain output, no animation (also SKILLS_NO_ANIM=1; NO_COLOR=1 drops colour)
 
 skills uninstall  remove the plugin folder
 skills list       print the available workflow names
 ```
+
+In a terminal the installer draws a banner, a spinner per step, a live progress bar over the
+workflows and a summary box with the next steps. Piped into a file, run in CI, or with
+`--no-anim`, the same information comes out as plain lines — no escape codes, no delays. On an
+old Windows console without Unicode support it falls back to ASCII glyphs.
 
 Re-running is safe: existing files are left alone unless you pass `--force`.
 
@@ -152,17 +158,18 @@ bin/install.js      the installer
 | `spec` | Write the spec directly — the direction is already decided |
 | `plan` | Research, split into phases, red-team the plan, hand off to `cook` |
 | `cook` | Implement a plan phase by phase, with test and review gates |
-| `fix` | Scout → diagnose → fix → review → finalize, for a specific bug |
-| `cicd` | Scaffold or audit a Docker → registry → deploy pipeline; resolves the track, then defers |
-| `cicd-dokploy` | The GitHub Actions → DockerHub → Dokploy/VPS standard |
-| `cicd-azure-k8s` | The Azure DevOps → registry → Kubernetes standard |
+| `fix` | Scout → reproduce → root-cause gate → fix → regression test → review, for a specific bug |
+| `scenario` | Edge cases across 12 dimensions, turned into test anchors before code is written |
+| `sumup` | Recap finished work: outcome, evidence, decisions, what is left |
+| `cicd` | Scaffold or audit a Docker → registry → deploy pipeline, on the Dokploy or Azure-K8s track |
 | `frontend-mindset` | Product UI: app screens, dashboards, tables, forms — and reviewing them |
 | `design-taste-frontend` | Marketing surfaces: landing pages, portfolios, campaign sites, redesigns |
 | `minimalist-ui` | One specific look: warm monochrome, editorial, flat bento, document-style |
 | `problem-solving` | The work is stuck and you need a different way to think about it |
 | `skill-creator` | Create, validate, evaluate or improve a skill |
 
-Typical chains: `brainstorm → plan → cook` for something novel, `spec → cook` when the direction
+Typical chains: `brainstorm → plan → cook` for something novel (`plan` pulls in `scenario` for
+high-risk or `--tdd` work, and `cook`/`fix` close with `sumup`), `spec → cook` when the direction
 is settled, `fix` on its own for a bug. `problem-solving` cuts in whenever a workflow stalls.
 
 ### The subagents
@@ -170,8 +177,9 @@ is settled, `fix` on its own for a bug. `problem-solving` cuts in whenever a wor
 `researcher`, `planner`, `plan-reviewer`, `scout`, `debugger`, `tester`, `code-reviewer`,
 `project-manager`, `docs-manager`, `git-manager`. Splitting the work this way is the point: a
 fresh context that only has to review is much harder to talk out of a finding than the same
-context that just wrote the code. The four review-shaped roles are declared read-only so they
-report rather than quietly fix.
+context that just wrote the code. `scout`, `plan-reviewer` and `code-reviewer` carry a
+`tools` allowlist with no file-editing tool, so they report rather than quietly fix; `researcher`
+is read-only by instruction (see `agents/README.md` for why, and a one-minute check for your build).
 
 Without subagent support nothing breaks — each workflow says to run the role inline instead.
 

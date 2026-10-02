@@ -1,8 +1,3 @@
----
-name: meta-pattern-recognition
-description: "Spot patterns appearing in 3+ domains to find universal principles"
----
-
 # Meta-Pattern Recognition
 
 ## Overview

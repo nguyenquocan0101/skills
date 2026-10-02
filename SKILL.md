@@ -1,6 +1,6 @@
 ---
 name: skills
-description: "Dispatcher for a collection of agent workflows — brainstorm, spec, plan, cook (implement), fix (debug), cicd, three frontend design skills, problem-solving techniques, and skill-creator. Use when a task matches one of these workflows, when the user asks which workflow to run, or when they want the collection's catalogue. Routes to exactly one component and loads only that one."
+description: "Dispatcher for a collection of agent workflows — brainstorm, spec, scenario (edge cases), plan, cook (implement), fix (debug), sumup (recap), cicd, three frontend design skills, problem-solving techniques, and skill-creator. Use when a task matches one of these workflows, when the user asks which workflow to run, or when they want the collection's catalogue. Routes to exactly one component and loads only that one."
 ---
 
 # skills — agent workflow collection
@@ -18,10 +18,10 @@ CI/CD nobody asked for.
 | `spec` | Write the spec directly — the direction is already decided |
 | `plan` | Research, split into phases, red-team the plan, hand off to `cook` |
 | `cook` | Implement a plan phase by phase, with tests and review gates |
-| `fix` | Scout → diagnose → fix → review → finalize, for a specific bug |
-| `cicd` | Scaffold or audit a Docker → registry → deploy pipeline — decides the track, then defers to one of the two below |
-| `cicd-dokploy` | The GitHub Actions → DockerHub → Dokploy/VPS standard: stages, API deploy, tagging, rollback |
-| `cicd-azure-k8s` | The Azure DevOps → registry → Kubernetes standard: stages, manifests/Helm, rollout, rollback |
+| `fix` | Scout → reproduce → root-cause gate → fix → regression test → review, for a specific bug |
+| `scenario` | Edge cases before code: 12 dimensions, severity, test anchors for `plan` and `tester` |
+| `sumup` | Recap finished work — outcome, verified vs not, decisions, what is left |
+| `cicd` | Scaffold or audit a Docker → registry → deploy pipeline on the Dokploy (GitHub Actions → DockerHub → Dokploy/VPS) or Azure-K8s (Azure DevOps → DockerHub/ACR → Kubernetes) track |
 | `frontend-mindset` | Product UI: app screens, dashboards, tables, forms, components — and reviewing them |
 | `design-taste-frontend` | Marketing surfaces: landing pages, portfolios, campaign sites, redesigns |
 | `minimalist-ui` | One specific look: warm monochrome, editorial, flat bento, document-style |
@@ -54,9 +54,8 @@ engineering and `minimalist-ui` for the visual language.
    equivalent step inline and say briefly which fallback you used — see
    `references/host-compatibility.md`.
 
-`cicd` is the entry point for pipeline work — it resolves the track and the mode, then reads the
-matching track skill in full. Go straight to `cicd-dokploy` or `cicd-azure-k8s` only when you
-already know the track and just want the standard.
+`cicd` is the only entry point for pipeline work — it resolves the track and the mode, then
+reads just that track's reference file (`skills/cicd/references/dokploy.md` or `skills/cicd/references/azure-k8s.md`).
 
 **Sequencing.** Novel or ambiguous feature: `brainstorm` → `plan` → `cook`. Already decided:
 `spec` or `plan` → `cook`. A specific bug: `fix` on its own. Blocked or the failure mode is

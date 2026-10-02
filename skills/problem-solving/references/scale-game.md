@@ -1,8 +1,3 @@
----
-name: scale-game
-description: "Test at extremes (1000x bigger/smaller, instant/year-long) to expose fundamental truths hidden at normal scales"
----
-
 # Scale Game
 
 ## Overview

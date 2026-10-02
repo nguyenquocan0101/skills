@@ -1,8 +1,12 @@
 ---
 name: code-reviewer
-description: "Review a change for correctness, security, regressions and quality, and return a scored verdict. Spawned by `cook` Step 4 and `fix` Step 3."
+description: "Review a change for correctness, security, regressions and quality, and return a scored verdict. Spawned by `cook` Step 4 and `fix` Step 4."
 mainAgent: false
 subagent: true
+tools:
+  - view_file
+  - grep_search
+  - run_command
 ---
 
 # code-reviewer

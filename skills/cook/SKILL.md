@@ -101,8 +101,9 @@ For each `phase-XX-*.md` in order:
 {what cook will do next}
 ```
 
-**Review Gate** — after each phase:
-- **Standard / `--hard`**: pause and wait for user approval
+**Phase checkpoint** — after each phase (a progress pause, not the code-review approval; that
+gate is Step 4 and follows the rubric):
+- **Standard / `--hard`**: pause and wait for the user to confirm the next phase
 - **`--fast`** / **`--parallel`**: continue automatically
 
 Stop if: success criterion unverifiable, unexpected blocker, or phase needs user decisions not in the plan.
@@ -122,7 +123,7 @@ Stop if: success criterion unverifiable, unexpected blocker, or phase needs user
 1. Before spawning `tester`, snapshot `PRE_TRACKED` (`git ls-files`) and `PRE_DIRS` (`find <repo-root> -type d`, excluding `.git`/`node_modules`). `<repo-root>` via `git rev-parse --show-toplevel`.
 2. After `tester`'s `Test files written:` list comes back: reject any path whose `realpath` doesn't start with `<repo-root>`. Eligibility is decided by the orchestrator, never by `tester`'s say-so — a path already in `PRE_TRACKED` is never eligible, regardless of what `tester` reported.
 3. Append eligible paths to `plans/{slug}/scratch-tests.json` as `{path, phase, createdAt, status: "pending"}` (create as `[]` if missing; if existing JSON fails to parse, rename to `.corrupt-<timestamp>` and start fresh — never abort or silently overwrite).
-4. `ask the user directly`: keep or discard, as one batch covering all eligible files this phase.
+4. Ask the user: keep or discard, as one batch covering all eligible files this phase.
 5. **Keep**: mark entries `"kept"`, proceed normally.
 6. **Discard**: per file — `rm`, mark that entry `"discarded"` and persist the ledger immediately (not batched), then walk up from its parent directory toward `<repo-root>`, stopping at the first ancestor present in `PRE_DIRS` (never touch it or above); remove each directory below that point only if it is now empty AND was absent from `PRE_DIRS`.
 
@@ -137,7 +138,7 @@ Action:  Awaiting user guidance
 ```
 
 **`--tdd`**: invert per phase:
-1. `tester` writes failing tests (red) — from `### Tests to Write First` or spec acceptance criteria
+1. `tester` writes failing tests (red) — from `### Tests to Write First`, the CRITICAL/HIGH test anchors in `plans/{slug}/scenarios.md` if present, or spec acceptance criteria
 2. Confirm red before implementing
 3. Implement until green, full suite passes
 
@@ -200,6 +201,8 @@ Success criteria:  {N}/{total} verifiable
 Uncovered P1:      {list any, or "none"}
 ```
 
+**`sumup`** (skip `--fast`): short recap — outcome, what was verified and what wasn't, decisions, what is left. Reference the spec coverage block and review score instead of repeating them.
+
 **`git-manager`** (always): conventional commits → ask to push.
 
 ---
@@ -214,6 +217,7 @@ Uncovered P1:      {list any, or "none"}
 | `code-reviewer`   | 4    | Standard, `--hard`, `--parallel` (skip for `--fast`) |
 | `project-manager` | 5    | Standard, `--hard`, `--parallel` (skip for `--fast`) |
 | `docs-manager`    | 5    | Standard, `--hard`, `--parallel` (skip for `--fast`) |
+| `sumup` skill     | 5    | Standard, `--hard`, `--parallel` (skip for `--fast`) |
 | `git-manager`     | 5    | Always (mandatory) |
 
 Definitions for these roles ship in `../../agents/` — copy them to `.agents/agents/`

@@ -1,8 +1,3 @@
----
-name: simplification-cascades
-description: "Find one insight that eliminates multiple components - \"if this is true, we don't need X, Y, or Z\""
----
-
 # Simplification Cascades
 
 ## Overview

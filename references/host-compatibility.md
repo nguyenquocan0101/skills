@@ -71,6 +71,29 @@ tool events, `invocationNum` for invocation events, `terminationReason` and `ful
 - **Hooks run synchronously inside the agent loop.** A slow hook is felt as a slow agent. Default
   timeout is 30 seconds; keep handlers well under it.
 - **Only `command` handlers exist.** There is no inline-script or HTTP handler type.
+- **`injectSteps` takes objects, not strings.** Each entry is `{"ephemeralMessage": "..."}`,
+  `{"userMessage": "..."}` or `{"toolCall": {...}}`. A bare string is not a valid step.
+- **Tool names and arguments.** File edits arrive as `write_to_file`, `replace_file_content` and
+  `multi_replace_file_content` with the path in `args.TargetFile`; shell commands as
+  `run_command` with `args.CommandLine` and `args.Cwd`. Match on those, and read anything else
+  from your own `transcript.jsonl` rather than guessing.
+
+Limits worth designing around, observed in public captures rather than stated in the docs:
+
+- **Tool events depend on the build.** One capture of Antigravity CLI 1.2.7 saw only
+  `PreInvocation`, `PostInvocation` and `Stop` dispatched; `PostToolUse` is confirmed on 1.2.14.
+  A hook that guards something important via `PreToolUse` should be checked on your own build.
+- **Subagent tool calls do not fire the parent's `PreToolUse`/`PostToolUse`.** A policy hook that
+  must also cover subagents cannot rely on workspace tool hooks alone.
+- **`force_continue` has no ceiling.** A `PostInvocation` hook returning `terminationBehavior:
+  "force_continue"` can loop indefinitely (antigravity-cli issue #1055). Any hook that uses it
+  must keep its own counter — and must never emit it from an error path.
+- **Relative `command` paths resolve against the launch directory,** not the config file. Launch
+  from the workspace root or use absolute paths.
+- **Global hook config differs by surface.** The docs give `~/.gemini/config/hooks.json`, and for
+  the CLI also `~/.gemini/antigravity-cli/settings.json`. Workspace (`.agents/hooks.json`) and
+  plugin hooks are the same on every surface, which is why this collection ships its hook in the
+  plugin.
 
 `../hooks/` in this collection ships a working example: the simplify trigger `cook` Step 3.S reads.
 
@@ -86,11 +109,19 @@ tool events, `invocationNum` for invocation events, `terminationReason` and `ful
   with the user's own customizations, and removing it removes the whole bundle.
 - Subagent frontmatter: `name` and `description` are required; `tools`, `mainAgent`, `subagent`,
   `model`, `commandExecutionPolicy` (default `sandbox`), `mcpServers` and `skills`/`plugins` are
-  optional. `tools` takes an array of the host's tool names — leave it out rather than guess, since
-  an unrecognised name is worse than the default.
+  optional. `model` takes `inherit` (default), `flash` or `pro`; `commandExecutionPolicy` takes
+  `off`, `auto`, `eager` or `sandbox`. `tools` takes an array of the host's tool names. Only declare
+  names the docs show (`view_file`, `grep_search`, `run_command`, plus the edit tools listed in
+  the hooks section) — tool names differ between surfaces (the SDK calls them `list_directory`,
+  `edit_file`, `start_subagent`), and an unrecognised name is worse than the default. This
+  collection's three review roles declare `[view_file, grep_search, run_command]`; see
+  `../agents/README.md` for the one-minute check that your build honours it.
 - Nested skill folders (a `SKILL.md` inside another skill's directory) are not a documented
-  discovery path. `problem-solving`'s techniques are therefore addressed as reference files by
-  relative path from its own `SKILL.md`, not as separately discovered skills.
+  discovery path, so no skill here contains another `SKILL.md`. `problem-solving`'s techniques
+  live in its `references/` folder as plain Markdown.
+- Plugin skills are invoked as `/<plugin>:<skill>` — `/skills:plan`, `/skills:fix` for this
+  collection — so they don't collide with built-in commands or with another plugin's `fix`.
+  `agy plugin validate` reports how a plugin was read.
 - Rules live in `.agents/rules/` and `~/.gemini/GEMINI.md`, and workflow markdown files are capped
   at **12,000 characters each**. Skills have no documented cap, but a workflow that wraps one of
   these skills has to stay under it — another reason the long skills here push detail into

@@ -1,46 +1,44 @@
 ---
 name: problem-solving
-description: "Creative problem-solving techniques for breaking through stuck points - includes collision-zone thinking, inversion, pattern recognition, and simplification"
+description: "Creative problem-solving techniques for breaking through stuck points - includes collision-zone thinking, inversion, pattern recognition, scale testing and simplification. Use when the work is stuck: the same fix keeps failing, complexity keeps growing, every option looks bad, or the user says \"we're stuck\", \"I'm going in circles\", \"there must be a simpler way\"."
 ---
 
 # Problem-Solving Skills
 
 A collection of techniques for breaking through stuck points and finding elegant solutions.
 
-Each technique lives in its own folder with a `SKILL.md`. Read them as reference files by the
-relative path given below — nested skill discovery isn't a documented behaviour on Antigravity or
-most other hosts, so don't rely on them being separately listed and triggerable. This file is the
-entry point; it routes, and the technique file does the work.
+Each technique is a reference file under `references/`. This file is the entry point: it routes,
+and the technique file does the work. Read only the one you need.
 
 ## Available techniques
 
 ### When Stuck (Dispatch)
-**Location:** `when-stuck/SKILL.md`
+**Location:** `references/when-stuck.md`
 
 Start here when stuck. Matches your stuck-type to the right technique. Quick dispatch table for routing to the appropriate sub-skill.
 
 ### Collision-Zone Thinking
-**Location:** `collision-zone-thinking/SKILL.md`
+**Location:** `references/collision-zone-thinking.md`
 
 Force unrelated concepts together to discover emergent properties. "What if we treated X like Y?" Revolutionary insights come from deliberate metaphor-mixing.
 
 ### Inversion Exercise
-**Location:** `inversion-exercise/SKILL.md`
+**Location:** `references/inversion-exercise.md`
 
 Flip every assumption and see what still works. "What if the opposite were true?" Exposes hidden constraints and alternative approaches.
 
 ### Meta-Pattern Recognition
-**Location:** `meta-pattern-recognition/SKILL.md`
+**Location:** `references/meta-pattern-recognition.md`
 
 Spot patterns appearing in 3+ domains to find universal principles. Extract abstract forms that apply across domains.
 
 ### Scale Game
-**Location:** `scale-game/SKILL.md`
+**Location:** `references/scale-game.md`
 
 Test at extremes (1000x bigger/smaller) to expose fundamental truths. What breaks? What survives? Extremes reveal what normal scales hide.
 
 ### Simplification Cascades
-**Location:** `simplification-cascades/SKILL.md`
+**Location:** `references/simplification-cascades.md`
 
 Find one insight that eliminates multiple components. "If this is true, we don't need X, Y, or Z." Look for unifying principles.
 

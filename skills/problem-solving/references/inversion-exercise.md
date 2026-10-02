@@ -1,8 +1,3 @@
----
-name: inversion-exercise
-description: "Flip core assumptions to reveal hidden constraints and alternative approaches - \"what if the opposite were true?\""
----
-
 # Inversion Exercise
 
 ## Overview

@@ -1,8 +1,3 @@
----
-name: when-stuck
-description: "Dispatch to the right problem-solving technique based on how you're stuck"
----
-
 # When Stuck — Problem-Solving Dispatch
 
 ## Overview
@@ -15,11 +10,11 @@ Different stuck-types need different techniques. This skill helps you quickly id
 
 | How You're Stuck | Use This Skill |
 |------------------|----------------|
-| **Complexity spiraling** — Same thing 5+ ways, growing special cases | `simplification-cascades/SKILL.md` |
-| **Need innovation** — Conventional solutions inadequate, can't find fitting approach | `collision-zone-thinking/SKILL.md` |
-| **Recurring patterns** — Same issue different places, reinventing wheels | `meta-pattern-recognition/SKILL.md` |
-| **Forced by assumptions** — "Must be done this way", can't question premise | `inversion-exercise/SKILL.md` |
-| **Scale uncertainty** — Will it work in production? Edge cases unclear? | `scale-game/SKILL.md` |
+| **Complexity spiraling** — Same thing 5+ ways, growing special cases | `simplification-cascades.md` |
+| **Need innovation** — Conventional solutions inadequate, can't find fitting approach | `collision-zone-thinking.md` |
+| **Recurring patterns** — Same issue different places, reinventing wheels | `meta-pattern-recognition.md` |
+| **Forced by assumptions** — "Must be done this way", can't question premise | `inversion-exercise.md` |
+| **Scale uncertainty** — Will it work in production? Edge cases unclear? | `scale-game.md` |
 | **Multiple independent problems** — Can parallelize investigation | Use Agent tool with parallel subagents |
 
 ## Process
