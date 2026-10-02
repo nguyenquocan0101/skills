@@ -37,11 +37,32 @@ then merge `hooks.json` into `<workspace>/.agents/hooks.json` (or `~/.gemini/con
 for every workspace), adjusting the script path to match. Workspace config takes precedence over
 global, and plugin hooks load alongside both.
 
-**Check the matcher.** `PostToolUse` matchers are regexes over *tool names*, and the exact names
-of the file-editing tools differ between Antigravity releases and surfaces. The shipped matcher
-covers the common spellings; confirm against the tool names in your own `transcript.jsonl`
-(its path arrives in every hook payload as `transcriptPath`) and widen it to `".*"` if you would
-rather filter inside the script.
+**Check the matcher.** `PostToolUse` matchers are regexes over *tool names*. Antigravity's own
+file-editing tools are `write_to_file`, `replace_file_content` and `multi_replace_file_content`,
+and all three carry the edited path in `args.TargetFile`; the shipped matcher lists those plus
+the spellings other hosts use. If your build names them differently, read the real names from
+your `transcript.jsonl` (its path arrives in every hook payload as `transcriptPath`) and widen the
+matcher, or set it to `".*"` and let the script filter — it ignores anything that isn't an
+existing code file.
+
+**Verify it actually fires.** Hook failures are silent, so check once after installing: let the
+agent edit any code file, then look for `.skills/simplify-state.json` at the workspace root.
+Missing means the hook never ran — in order of likelihood: the interpreter name (`python3` does
+not exist on a default Windows install; the installer detects `py -3`/`python`), the script path
+(relative paths resolve against the directory the agent was launched from, so launch from the
+workspace root or rerun the installer with an absolute `--target`), the matcher, or a build that
+does not dispatch tool events (see below).
+
+**Known limits, as of mid-2026:**
+
+- Tool events are build-dependent. A capture on Antigravity CLI 1.2.7 saw only `PreInvocation`,
+  `PostInvocation` and `Stop` fire; `PostToolUse` is confirmed firing on CLI 1.2.14. On a build
+  without it the trigger file is simply never written, and `cook` Step 3.S skips — the same as a
+  run that never crossed a threshold.
+- Edits made **inside a subagent** (`tester`, `debugger`) do not fire the parent's tool hooks,
+  so they are not counted. The trigger measures what the main agent wrote.
+- The trigger fires **once per run**: after it injects its step it stays quiet until `Stop`
+  clears the state, so deleting the trigger file after the simplify pass does not re-create it.
 
 ## Install (other hosts)
 

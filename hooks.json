@@ -3,7 +3,7 @@
     "enabled": true,
     "PostToolUse": [
       {
-        "matcher": "edit_file|write_file|replace_file_content|create_file|write_to_file|apply_patch",
+        "matcher": "write_to_file|replace_file_content|multi_replace_file_content|edit_file|write_file|create_file|apply_patch",
         "hooks": [
           {
             "type": "command",

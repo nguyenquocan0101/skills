@@ -62,17 +62,24 @@ def save(path, data):
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
+# Argument names that carry the edited file, compared case- and underscore-insensitively.
+# Antigravity's own edit tools (write_to_file, replace_file_content, multi_replace_file_content)
+# use `TargetFile`; the rest cover other hosts and older builds.
+PATH_KEYS = {"targetfile", "path", "filepath", "absolutepath", "uri", "file"}
+
+
 def edited_paths(tool_call):
     """Pull file paths out of a tool call without assuming one host's argument names."""
     args = (tool_call or {}).get("args") or {}
+    if not isinstance(args, dict):
+        return []
     found = []
-    for key in ("path", "file_path", "filePath", "target_file", "absolute_path", "uri"):
-        value = args.get(key)
-        if isinstance(value, str) and value.strip():
-            found.append(value)
-    files = args.get("files")
-    if isinstance(files, list):
-        found += [f for f in files if isinstance(f, str)]
+    for key, value in args.items():
+        norm = key.replace("_", "").lower()
+        if norm in PATH_KEYS and isinstance(value, str) and value.strip():
+            found.append(value[len("file://"):] if value.startswith("file://") else value)
+        elif norm == "files" and isinstance(value, list):
+            found += [f for f in value if isinstance(f, str) and f.strip()]
     return found
 
 
@@ -118,7 +125,10 @@ def main():
     if event == "post_invocation":
         state = load(state_path)
         files = state.get("files") or {}
-        if not files:
+        # Fire once per run. PostInvocation runs after every model call, and the accumulator only
+        # resets on Stop, so without this the step would be re-injected on every call after the
+        # threshold - and re-created right after cook deletes the trigger file.
+        if not files or state.get("triggered"):
             emit()
         limits = thresholds(root)
         total = sum(files.values())
@@ -139,12 +149,16 @@ def main():
             "totalLoc": total,
             "conversationId": payload.get("conversationId", ""),
         })
-        emit({"injectSteps": [
-            "SIMPLIFY_TRIGGERED — this change crossed a simplify threshold ("
+        state["triggered"] = True
+        save(state_path, state)
+        # Each injected step must be an object: {"ephemeralMessage": ...}, {"userMessage": ...}
+        # or {"toolCall": ...}. A bare string is not a valid step.
+        emit({"injectSteps": [{"ephemeralMessage":
+            "SIMPLIFY_TRIGGERED - this change crossed a simplify threshold ("
             + "; ".join(reasons)
-            + f"). Before code review, run the `simplify` pass described in cook Step 3.S over the "
+            + f"). Before code review, run the simplify pass described in cook Step 3.S over the "
               f"files listed in {STATE_DIR}/{TRIGGER_FILE}, then delete that file."
-        ]})
+        }]})
 
     emit()
 
